@@ -6,6 +6,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
 COPY bin/linux/sshless /usr/local/bin/sshless
 
-EXPOSE 22
+EXPOSE 2222
 
-CMD ["sshless", "-addr", ":22"]
+CMD ["sshless"]
