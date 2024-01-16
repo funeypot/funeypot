@@ -8,4 +8,4 @@ COPY bin/linux/sshless /usr/local/bin/sshless
 
 EXPOSE 2222
 
-CMD ["sshless"]
+ENTRYPOINT ["sshless"]
