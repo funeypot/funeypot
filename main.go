@@ -9,10 +9,14 @@ import (
 	"github.com/gliderlabs/ssh"
 )
 
-var addr = ":2222"
+var (
+	addr  = ":2222"
+	delay = 2 * time.Second
+)
 
 func init() {
 	flag.StringVar(&addr, "addr", addr, "address to listen")
+	flag.DurationVar(&delay, "delay", delay, "delay to login")
 }
 
 func main() {
@@ -20,6 +24,7 @@ func main() {
 
 	slog.Info("start listening",
 		"addr", addr,
+		"delay", delay,
 	)
 
 	sever := &ssh.Server{
@@ -43,7 +48,7 @@ func main() {
 			select {
 			case <-ctx.Done():
 				return false
-			case <-time.After(2 * time.Second):
+			case <-time.After(delay):
 				return false
 			}
 		},
