@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/gliderlabs/ssh"
@@ -22,9 +23,11 @@ func init() {
 func main() {
 	flag.Parse()
 
+	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{})))
+
 	slog.Info("start listening",
 		"addr", addr,
-		"delay", delay,
+		"delay", delay.String(),
 	)
 
 	sever := &ssh.Server{
