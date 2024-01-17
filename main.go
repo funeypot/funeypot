@@ -45,7 +45,7 @@ func main() {
 
 			remoteIp, _, _ := net.SplitHostPort(ctx.RemoteAddr().String())
 
-			record := GetRecord(remoteIp)
+			record := GetRecord(ctx, remoteIp)
 
 			slog.Info("new login",
 				"session_id", sessionId,
@@ -55,10 +55,8 @@ func main() {
 				"remote_ip", remoteIp,
 				"count", record.Count,
 				"duration", record.Duration().String(),
+				"geo", record.Geo,
 			)
-			if password == "test" {
-				return true
-			}
 			select {
 			case <-ctx.Done():
 				return false

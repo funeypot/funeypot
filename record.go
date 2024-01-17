@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"log/slog"
 	"sync"
 	"time"
 )
@@ -9,6 +11,7 @@ type Record struct {
 	StartedAt time.Time
 	StoppedAt time.Time
 	Count     int
+	Geo       string
 }
 
 func (r *Record) Duration() time.Duration {
@@ -20,7 +23,7 @@ var (
 	recordM sync.Mutex
 )
 
-func GetRecord(ip string) Record {
+func GetRecord(ctx context.Context, ip string) Record {
 	recordM.Lock()
 	defer recordM.Unlock()
 
@@ -33,18 +36,28 @@ func GetRecord(ip string) Record {
 
 	now := time.Now()
 
-	if record, ok := records[ip]; ok {
-		record.StoppedAt = now
-		record.Count++
-		return *record
+	record, ok := records[ip]
+	if !ok {
+		record = &Record{
+			StartedAt: now,
+		}
+		records[ip] = record
 	}
 
-	record := &Record{
-		StartedAt: now,
-		StoppedAt: now,
-		Count:     1,
+	record.StoppedAt = now
+	record.Count++
+
+	if record.Geo == "" {
+		geo, err := IpGeo(ctx, ip)
+		if err != nil {
+			slog.Error("get ip geo",
+				"ip", ip,
+				"error", err,
+			)
+		} else {
+			record.Geo = geo
+		}
 	}
 
-	records[ip] = record
 	return *record
 }
