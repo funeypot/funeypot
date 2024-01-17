@@ -9,7 +9,7 @@ import (
 )
 
 func IpGeo(ctx context.Context, ip string) (string, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("https://ip-api.com/json/%s?fields=status,message,continent,country,regionName,city,district,isp&lang=zh-CN", ip), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://ip-api.com/json/%s?fields=status,message,continent,country,regionName,city,district,isp&lang=zh-CN", ip), nil)
 	if err != nil {
 		return "", fmt.Errorf("new request: %w", err)
 	}
@@ -26,7 +26,7 @@ func IpGeo(ctx context.Context, ip string) (string, error) {
 	}
 
 	if result.Status != "success" {
-		return "", fmt.Errorf("status: %s", result.Status)
+		return "", fmt.Errorf("%s: %s", result.Status, result.Message)
 	}
 
 	var strs []string
@@ -53,6 +53,7 @@ func IpGeo(ctx context.Context, ip string) (string, error) {
 
 type GeoResponse struct {
 	Status     string `json:"status"`
+	Message    string `json:"message"`
 	Continent  string `json:"continent"`
 	Country    string `json:"country"`
 	RegionName string `json:"regionName"`
