@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log/slog"
+	"net"
 	"os"
 	"time"
 
@@ -41,13 +42,23 @@ func main() {
 			if len(sessionId) > 8 {
 				sessionId = sessionId[:8]
 			}
+
+			remoteIp, _, _ := net.SplitHostPort(ctx.RemoteAddr().String())
+
+			record := GetRecord(remoteIp)
+
 			slog.Info("new login",
 				"session_id", sessionId,
 				"user", ctx.User(),
 				"password", password,
 				"client_version", ctx.ClientVersion(),
-				"remote_addr", ctx.RemoteAddr(),
+				"remote_ip", remoteIp,
+				"count", record.Count,
+				"duration", record.Duration().String(),
 			)
+			if password == "test" {
+				return true
+			}
 			select {
 			case <-ctx.Done():
 				return false
