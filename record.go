@@ -8,10 +8,12 @@ import (
 )
 
 type Record struct {
-	StartedAt time.Time
-	StoppedAt time.Time
-	Count     int
-	Geo       string
+	Ip         string
+	StartedAt  time.Time
+	StoppedAt  time.Time
+	Count      int
+	Geo        string
+	ReportedAt time.Time
 }
 
 func (r *Record) Duration() time.Duration {
@@ -39,6 +41,7 @@ func GetRecord(ctx context.Context, ip string) Record {
 	record, ok := records[ip]
 	if !ok {
 		record = &Record{
+			Ip:        ip,
 			StartedAt: now,
 		}
 		records[ip] = record

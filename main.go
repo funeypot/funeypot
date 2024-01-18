@@ -12,19 +12,23 @@ import (
 )
 
 var (
-	addr  = ":2222"
-	delay = 2 * time.Second
+	addr         = ":2222"
+	delay        = 2 * time.Second
+	abuseIpDbKey = ""
 )
 
 func init() {
 	flag.StringVar(&addr, "addr", addr, "address to listen")
 	flag.DurationVar(&delay, "delay", delay, "delay to login")
+	flag.StringVar(&abuseIpDbKey, "abuseipdb-key", abuseIpDbKey, "abuseipdb key")
 }
 
 func main() {
 	flag.Parse()
 
 	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{})))
+
+	StartReport()
 
 	slog.Info("start listening",
 		"addr", addr,
