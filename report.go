@@ -59,7 +59,7 @@ func reportAbuseIpDb(record Record) {
 	data := url.Values{}
 	data.Set("ip", record.Ip)
 	data.Add("categories", "18,22")
-	data.Add("comment", fmt.Sprintf("Caught by honeypots, this IP has attempted to crack the SSH login password %d times within the past %s.", record.Count, record.Duration().String()))
+	data.Add("comment", fmt.Sprintf("Caught by honeypots, tried to crack SSH password %d times within %s.", record.Count, record.Duration().String()))
 	data.Add("timestamp", time.Now().Format(time.RFC3339))
 
 	req, err := http.NewRequest(http.MethodPost, "https://api.abuseipdb.com/api/v2/report", bytes.NewBufferString(data.Encode()))
@@ -98,7 +98,7 @@ func reportAbuseIpDb(record Record) {
 		return
 	}
 
-	slog.Debug("report abuse ip db",
+	slog.Info("report abuse ip db",
 		"ip", result.Data.IpAddress,
 		"score", result.Data.AbuseConfidenceScore,
 	)
