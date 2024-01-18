@@ -42,7 +42,7 @@ func report() {
 		reportAbuseIpDb(v)
 	}
 
-	time.AfterFunc(time.Minute, report)
+	time.AfterFunc(time.Until(time.Now().Add(time.Minute).Truncate(time.Minute)), report)
 }
 
 /*
