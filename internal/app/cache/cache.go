@@ -73,7 +73,7 @@ func (c *Cache) IncrRecord(ctx context.Context, ip string) (*model.Record, error
 		}
 	}
 	record.Count++
-	record.StartedAt = time.Now()
+	record.StoppedAt = time.Now()
 	if err := c.SetRecord(ctx, record); err != nil {
 		return nil, fmt.Errorf("set record: %v", err)
 	}
