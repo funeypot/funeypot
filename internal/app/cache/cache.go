@@ -18,9 +18,15 @@ type Cache struct {
 }
 
 func New(ctx context.Context, dir string) (*Cache, error) {
-	options := badger.DefaultOptions(dir)
-	options.Logger = logs.NewBadgerLogger(logs.From(ctx))
-	db, err := badger.Open(options)
+	db, err := badger.Open(badger.DefaultOptions(dir).
+		WithLogger(logs.NewBadgerLogger(logs.From(ctx))).
+		WithNumMemtables(1).
+		WithNumLevelZeroTables(1).
+		WithNumLevelZeroTablesStall(3).
+		WithNumCompactors(2).
+		WithBaseTableSize(1 << 10).
+		WithValueLogFileSize(1 << 20),
+	)
 	if err != nil {
 		return nil, fmt.Errorf("open badger: %w", err)
 	}
