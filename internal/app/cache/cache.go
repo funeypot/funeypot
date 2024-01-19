@@ -24,7 +24,7 @@ func New(ctx context.Context, dir string) (*Cache, error) {
 		WithNumLevelZeroTables(1).
 		WithNumLevelZeroTablesStall(3).
 		WithNumCompactors(2).
-		WithMemTableSize(1 << 20).
+		WithMemTableSize(8 << 20).
 		WithBaseTableSize(1 << 10).
 		WithValueLogFileSize(1 << 20),
 	)
