@@ -73,7 +73,7 @@ func reportAbuseIpDb(ctx context.Context, record *model.Record) error {
 	data := url.Values{}
 	data.Set("ip", record.Ip)
 	data.Add("categories", "18,22")
-	data.Add("comment", fmt.Sprintf("Caught by Funeypot, tried to crack SSH password %d times within %s.", record.Count, record.Duration().Truncate(time.Second).String()))
+	data.Add("comment", fmt.Sprintf("Caught by funeypot, tried to crack SSH password %d times within %s.", record.Count, record.Duration().Truncate(time.Second).String()))
 	data.Add("timestamp", time.Now().Format(time.RFC3339))
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.abuseipdb.com/api/v2/report", bytes.NewBufferString(data.Encode()))
