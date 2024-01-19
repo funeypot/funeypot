@@ -1,4 +1,4 @@
-NAME=sshless
+NAME=funeypot
 IMAGE_NAME=registry.aliyuncs.com/wolfogre/$(NAME)
 VERSION=$(shell git describe --tags --dirty --broken --always)
 

@@ -10,8 +10,8 @@ import (
 	"os/signal"
 	"time"
 
-	"sshless/internal/app/cache"
-	"sshless/internal/pkg/logs"
+	"github.com/wolfogre/funeypot/internal/app/cache"
+	"github.com/wolfogre/funeypot/internal/pkg/logs"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -20,7 +20,7 @@ var (
 	addr         = ":2222"
 	delay        = 2 * time.Second
 	abuseIpDbKey = ""
-	cacheDir     = "/tmp/sshless"
+	cacheDir     = "/tmp/funeypot"
 )
 
 func init() {

@@ -1,4 +1,4 @@
-module sshless
+module github.com/wolfogre/funeypot
 
 go 1.21.6
 

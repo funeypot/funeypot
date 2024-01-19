@@ -4,8 +4,8 @@ ENV TZ=Asia/Shanghai
 
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-COPY bin/linux/sshless /usr/local/bin/sshless
+COPY bin/linux/funeypot /usr/local/bin/funeypot
 
 EXPOSE 2222
 
-ENTRYPOINT ["sshless"]
+ENTRYPOINT ["funeypot"]

@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"time"
 
-	"sshless/internal/app/model"
-	"sshless/internal/pkg/logs"
+	"github.com/wolfogre/funeypot/internal/app/model"
+	"github.com/wolfogre/funeypot/internal/pkg/logs"
 
 	"github.com/dgraph-io/badger/v4"
 )
