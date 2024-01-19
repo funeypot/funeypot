@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	"sshless/internal/app/model"
 	"sshless/internal/pkg/logs"
 )
 
@@ -32,11 +33,13 @@ func StartReport(ctx context.Context) {
 }
 
 func report(ctx context.Context) {
-	var toReport []Record
+	records, err := Cache.AllRecords(ctx)
+	if err != nil {
+		logs.From(ctx).Errorf("get all records: %v", err)
+	}
 
-	recordM.Lock()
 	for _, v := range records {
-		if time.Since(v.ReportedAt) < 15*time.Minute {
+		if time.Since(v.ReportedAt) < 20*time.Minute {
 			continue
 		}
 		if time.Since(v.StoppedAt) > time.Hour {
@@ -45,13 +48,14 @@ func report(ctx context.Context) {
 		if v.Count < 5 {
 			continue
 		}
+		if err := reportAbuseIpDb(ctx, v); err != nil {
+			logs.From(ctx).Errorf("report abuse ip db: %v", err)
+			continue
+		}
 		v.ReportedAt = time.Now()
-		toReport = append(toReport, *v)
-	}
-	recordM.Unlock()
-
-	for _, v := range toReport {
-		reportAbuseIpDb(ctx, v)
+		if err := Cache.SetRecord(ctx, v); err != nil {
+			logs.From(ctx).Errorf("set record: %v", err)
+		}
 	}
 }
 
@@ -65,7 +69,7 @@ curl https://api.abuseipdb.com/api/v2/report \
   -H "Accept: application/json"
 */
 
-func reportAbuseIpDb(ctx context.Context, record Record) {
+func reportAbuseIpDb(ctx context.Context, record *model.Record) error {
 	data := url.Values{}
 	data.Set("ip", record.Ip)
 	data.Add("categories", "18,22")
@@ -74,8 +78,7 @@ func reportAbuseIpDb(ctx context.Context, record Record) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.abuseipdb.com/api/v2/report", bytes.NewBufferString(data.Encode()))
 	if err != nil {
-		logs.From(ctx).Errorf("new request: %v", err)
-		return
+		return fmt.Errorf("new request: %w", err)
 	}
 
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -84,23 +87,22 @@ func reportAbuseIpDb(ctx context.Context, record Record) {
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		logs.From(ctx).Errorf("do request: %v", err)
-		return
+		return fmt.Errorf("do request: %w", err)
 	}
 	defer resp.Body.Close()
 
 	result := &abuseIpDbResponse{}
 	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-		logs.From(ctx).Errorf("decode response: %v", err)
-		return
+		return fmt.Errorf("decode response: %w", err)
 	}
 
 	if len(result.Errors) > 0 {
 		logs.From(ctx).Errorf("report abuse ip db: %v", result.Errors)
-		return
+		return fmt.Errorf("report abuse ip db: %v", result.Errors)
 	}
 
-	logs.From(ctx).With("ip", result.Data.IpAddress, "score", result.Data.AbuseConfidenceScore).Infof("report abuse ip db")
+	logs.From(ctx).With("ip", result.Data.IpAddress, "score", result.Data.AbuseConfidenceScore).Debugf("report abuse ip db")
+	return nil
 }
 
 type abuseIpDbResponse struct {

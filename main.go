@@ -10,6 +10,7 @@ import (
 	"os/signal"
 	"time"
 
+	"sshless/internal/app/cache"
 	"sshless/internal/pkg/logs"
 
 	"github.com/gliderlabs/ssh"
@@ -19,13 +20,19 @@ var (
 	addr         = ":2222"
 	delay        = 2 * time.Second
 	abuseIpDbKey = ""
+	cacheDir     = "/tmp/sshless"
 )
 
 func init() {
 	flag.StringVar(&addr, "addr", addr, "address to listen")
 	flag.DurationVar(&delay, "delay", delay, "delay to login")
 	flag.StringVar(&abuseIpDbKey, "abuseipdb-key", abuseIpDbKey, "abuseipdb key")
+	flag.StringVar(&cacheDir, "cache-dir", cacheDir, "cache dir")
 }
+
+var (
+	Cache *cache.Cache
+)
 
 func main() {
 	flag.Parse()
@@ -34,6 +41,13 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
 	defer cancel()
 	ctx = logs.With(ctx, logs.Default())
+
+	c, err := cache.New(ctx, cacheDir)
+	if err != nil {
+		logs.From(ctx).Fatalf("new cache: %v", err)
+		return
+	}
+	Cache = c
 
 	StartReport(ctx)
 
@@ -46,6 +60,8 @@ func main() {
 			_, _ = fmt.Fprintln(session, "Fuck you")
 		},
 		PasswordHandler: func(ctx ssh.Context, password string) bool {
+			after := time.After(delay)
+
 			sessionId := ctx.SessionID()
 			if len(sessionId) > 8 {
 				sessionId = sessionId[:8]
@@ -53,22 +69,30 @@ func main() {
 
 			remoteIp, _, _ := net.SplitHostPort(ctx.RemoteAddr().String())
 
-			record := GetRecord(ctx, remoteIp)
-
-			logs.From(ctx).With(
+			logger := logs.From(ctx).With(
 				"session_id", sessionId,
 				"user", ctx.User(),
 				"password", password,
 				"client_version", ctx.ClientVersion(),
 				"remote_ip", remoteIp,
-				"count", record.Count,
-				"duration", record.Duration().String(),
-				"geo", record.Geo,
-			).Infof("login")
+			)
+
+			record, err := Cache.IncrRecord(ctx, remoteIp)
+			if err != nil {
+				logs.From(ctx).Errorf("get record: %v", err)
+			} else {
+				logger = logger.With(
+					"count", record.Count,
+					"duration", record.Duration().String(),
+					"geo", record.Geo,
+				)
+			}
+
+			logger.Infof("login")
 			select {
 			case <-ctx.Done():
 				return false
-			case <-time.After(delay):
+			case <-after:
 				return false
 			}
 		},

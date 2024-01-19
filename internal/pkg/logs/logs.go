@@ -8,7 +8,9 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-var def *zap.SugaredLogger
+type Logger = *zap.SugaredLogger
+
+var def Logger
 
 func init() {
 	config := zap.NewProductionConfig()
@@ -21,7 +23,7 @@ func init() {
 	def = logger.Sugar()
 }
 
-func Default() *zap.SugaredLogger {
+func Default() Logger {
 	return def
 }
 
@@ -29,7 +31,7 @@ type loggerInContext struct{}
 
 // From returns a Logger which is stored in context as a value,
 // if the Logger doesn't exist, it returns Default().WithCtx(ctx)
-func From(ctx context.Context) *zap.SugaredLogger {
+func From(ctx context.Context) Logger {
 	if got, ok := TryFrom(ctx); ok {
 		return got
 	}
@@ -38,9 +40,9 @@ func From(ctx context.Context) *zap.SugaredLogger {
 
 // TryFrom returns a Logger which is stored in context as a value,
 // if the Logger doesn't exist, it returns false.
-func TryFrom(ctx context.Context) (*zap.SugaredLogger, bool) {
+func TryFrom(ctx context.Context) (Logger, bool) {
 	if got := ctx.Value(loggerInContext{}); got != nil {
-		if logger, ok := got.(*zap.SugaredLogger); ok {
+		if logger, ok := got.(Logger); ok {
 			return logger, true
 		}
 	}
@@ -48,6 +50,6 @@ func TryFrom(ctx context.Context) (*zap.SugaredLogger, bool) {
 }
 
 // With returns a new context with the logger stored in it as a value
-func With(ctx context.Context, logger *zap.SugaredLogger) context.Context {
+func With(ctx context.Context, logger Logger) context.Context {
 	return context.WithValue(ctx, loggerInContext{}, logger)
 }
