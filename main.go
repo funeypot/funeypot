@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
+	"errors"
 	"flag"
 	"fmt"
-	"log/slog"
 	"net"
 	"os"
+	"os/signal"
 	"time"
+
+	"sshless/internal/pkg/logs"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -25,15 +29,15 @@ func init() {
 
 func main() {
 	flag.Parse()
+	defer logs.Default().Sync()
 
-	slog.SetDefault(slog.New(slog.NewJSONHandler(os.Stderr, &slog.HandlerOptions{})))
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	defer cancel()
+	ctx = logs.With(ctx, logs.Default())
 
-	StartReport()
+	StartReport(ctx)
 
-	slog.Info("start listening",
-		"addr", addr,
-		"delay", delay.String(),
-	)
+	logs.From(ctx).With("addr", addr, "delay", delay.String()).Infof("start listening")
 
 	sever := &ssh.Server{
 		Version: "OpenSSH_8.0",
@@ -51,7 +55,7 @@ func main() {
 
 			record := GetRecord(ctx, remoteIp)
 
-			slog.Info("new login",
+			logs.From(ctx).With(
 				"session_id", sessionId,
 				"user", ctx.User(),
 				"password", password,
@@ -60,7 +64,7 @@ func main() {
 				"count", record.Count,
 				"duration", record.Duration().String(),
 				"geo", record.Geo,
-			)
+			).Infof("login")
 			select {
 			case <-ctx.Done():
 				return false
@@ -69,9 +73,14 @@ func main() {
 			}
 		},
 	}
-	if err := sever.ListenAndServe(); err != nil {
-		slog.Error("listen and serve failed",
-			"error", err,
-		)
-	}
+	go func() {
+		if err := sever.ListenAndServe(); !errors.Is(err, ssh.ErrServerClosed) {
+			logs.From(ctx).Errorf("listen and serve: %v", err)
+		}
+		cancel()
+	}()
+
+	<-ctx.Done()
+	logs.From(ctx).Infof("shutdown")
+	_ = sever.Shutdown(ctx)
 }

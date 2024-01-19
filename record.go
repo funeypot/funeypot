@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"log/slog"
 	"sync"
 	"time"
+
+	"sshless/internal/pkg/logs"
 )
 
 type Record struct {
@@ -53,10 +54,7 @@ func GetRecord(ctx context.Context, ip string) Record {
 	if record.Geo == "" {
 		geo, err := IpGeo(ctx, ip)
 		if err != nil {
-			slog.Error("get ip geo",
-				"ip", ip,
-				"error", err,
-			)
+			logs.From(ctx).With("ip", ip).Errorf("get ip geo: %v", err)
 		} else {
 			record.Geo = geo
 		}
