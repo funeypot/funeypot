@@ -115,7 +115,7 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 
 	logger.Infof("login")
 
-	if record.Count >= 5 && time.Since(record.ReportedAt) > 20*time.Minute {
+	if h.abuseIpdbKey != "" && record.Count >= 5 && time.Since(record.ReportedAt) > 20*time.Minute {
 		score, err := h.reportRecord(ctx, record)
 		if err != nil {
 			logger.Errorf("report record: %v", err)
