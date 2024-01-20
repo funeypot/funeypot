@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -86,8 +87,10 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 	defer cancel()
 
+	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
 	logger := logs.From(ctx).With(
-		"ip", request.RemoteAddr,
+		"ip", ip,
+		"remote_addr", request.RemoteAddr,
 		"session_id", shortenSessionId(request.SessionId),
 		"user", request.User,
 		"password", request.Password,
@@ -95,7 +98,7 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	)
 
 	record := &model.Record{
-		Ip:        request.RemoteAddr,
+		Ip:        ip,
 		StartedAt: request.Time,
 	}
 	if err := h.db.Get(record); err != nil && !errors.Is(err, boltutil.ErrNotExist) {
