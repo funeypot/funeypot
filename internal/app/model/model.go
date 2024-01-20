@@ -1,22 +1,36 @@
 package model
 
 import (
+	"strings"
 	"time"
 
 	"github.com/gochore/boltutil"
 )
 
 type Record struct {
-	Ip         string    `json:"ip"`
-	StartedAt  time.Time `json:"started_at"`
-	StoppedAt  time.Time `json:"stopped_at"`
-	Count      int       `json:"count"`
-	ReportedAt time.Time `json:"reported_at"`
-	Score      int       `json:"score"`
+	Ip            string    `json:"ip"`
+	User          string    `json:"user"`
+	Password      string    `json:"password"`
+	ClientVersion string    `json:"client_version"`
+	StartedAt     time.Time `json:"started_at"`
+	StoppedAt     time.Time `json:"stopped_at"`
+	Count         int       `json:"count"`
+	ReportedAt    time.Time `json:"reported_at"`
+	Score         int       `json:"score"`
 }
 
 func (r *Record) Duration() time.Duration {
 	return r.StoppedAt.Sub(r.StartedAt)
+}
+
+func (r *Record) MaskedPassword() string {
+	prefix := len(r.Password) / 3
+	if prefix > 4 {
+		prefix = 4
+	}
+	suffix := prefix
+
+	return r.Password[:prefix] + strings.Repeat("*", len(r.Password)-prefix-suffix) + r.Password[len(r.Password)-suffix:]
 }
 
 var _ boltutil.Storable = (*Record)(nil)

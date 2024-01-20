@@ -103,6 +103,9 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 		return
 	}
 
+	record.User = request.User
+	record.Password = request.Password
+	record.ClientVersion = request.ClientVersion
 	record.StoppedAt = request.Time
 	record.Count++
 	logger = logger.With(
@@ -135,8 +138,17 @@ func (h *Handler) reportRecord(ctx context.Context, record *model.Record) (int, 
 	data := url.Values{}
 	data.Set("ip", record.Ip)
 	data.Add("categories", "18,22")
-	data.Add("comment", fmt.Sprintf("Caught by funeypot, tried to crack SSH password %d times within %s.", record.Count, record.Duration().Truncate(time.Second).String()))
 	data.Add("timestamp", time.Now().Format(time.RFC3339))
+
+	comment := fmt.Sprintf(
+		"Caught by funeypot, tried to crack SSH password %d times within %s. Last attempt by user %s with password '%s' via client %s.",
+		record.Count,
+		record.Duration().Truncate(time.Second).String(),
+		record.User,
+		record.MaskedPassword(),
+		record.ClientVersion,
+	)
+	data.Add("comment", comment)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, "https://api.abuseipdb.com/api/v2/report", bytes.NewBufferString(data.Encode()))
 	if err != nil {
