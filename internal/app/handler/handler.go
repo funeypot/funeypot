@@ -32,7 +32,7 @@ func New(ctx context.Context, delay time.Duration, abuseIpdbKey string, db *bolt
 		queue:        make(chan *Request, 1000),
 	}
 	go ret.handleQueue(ctx)
-	return nil
+	return ret
 }
 
 type Request struct {
