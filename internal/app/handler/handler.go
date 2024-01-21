@@ -200,3 +200,42 @@ type abuseIpdbResponse struct {
 		} `json:"source"`
 	} `json:"errors"`
 }
+
+func (h *Handler) HandleHttp(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	logger := logs.From(ctx)
+
+	remoteAddr := r.Header.Get("X-Forwarded-For")
+	logger = logger.With(
+		"remote_addr", remoteAddr,
+		"method", r.Method,
+		"uri", r.RequestURI,
+		"user_agent", r.UserAgent(),
+	)
+
+	w.Header().Set("WWW-Authenticate", `Basic realm="security" charset="UTF-8"`)
+	w.Header().Add("WWW-Authenticate", "ApiKey")
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusUnauthorized)
+
+	username, password, ok := r.BasicAuth()
+	if ok {
+		_, _ = fmt.Fprintf(w, `{"error":{"root_cause":[{"type":"security_exception","reason":"unable to authenticate user [%s] for REST request [%s]","header":{"WWW-Authenticate":["Basic realm=\"security\" charset=\"UTF-8\"","ApiKey"]}}],"type":"security_exception","reason":"unable to authenticate user [%s] for REST request [%s]","header":{"WWW-Authenticate":["Basic realm=\"security\" charset=\"UTF-8\"","ApiKey"]}},"status":401}`,
+			username,
+			r.RequestURI,
+			username,
+			r.RequestURI,
+		)
+		logger.With("username", username, "password", password).Infof("basic login")
+	} else if auth := r.Header.Get("Authorization"); auth != "" {
+		logger.Infof("other auth: %s", auth)
+	} else {
+		_, _ = fmt.Fprintf(w, `{"error":{"root_cause":[{"type":"security_exception","reason":"missing authentication credentials for REST request [%s]","header":{"WWW-Authenticate":["Basic realm=\"security\" charset=\"UTF-8\"","ApiKey"]}}],"type":"security_exception","reason":"missing authentication credentials for REST request [%s]","header":{"WWW-Authenticate":["Basic realm=\"security\" charset=\"UTF-8\"","ApiKey"]}},"status":401}`,
+			r.RequestURI,
+			r.RequestURI,
+		)
+		logger.Infof("no auth")
+	}
+
+	return
+}

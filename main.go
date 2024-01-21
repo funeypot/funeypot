@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"flag"
+	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
@@ -70,7 +71,20 @@ func main() {
 		cancel()
 	}()
 
+	httpServer := &http.Server{
+		Addr:    ":9200",
+		Handler: http.HandlerFunc(h.HandleHttp),
+	}
+	logger.Infof("start http listening")
+	go func() {
+		if err := httpServer.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
+			logs.From(ctx).Errorf("listen and serve: %v", err)
+		}
+		cancel()
+	}()
+
 	<-ctx.Done()
 	logs.From(ctx).Infof("shutdown")
 	_ = sever.Shutdown(ctx)
+	_ = httpServer.Shutdown(ctx)
 }
