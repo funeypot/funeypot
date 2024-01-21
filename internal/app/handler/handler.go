@@ -141,7 +141,7 @@ func (h *Handler) reportRecord(ctx context.Context, record *model.Record) (int, 
 	data := url.Values{}
 	data.Set("ip", record.Ip)
 	data.Add("categories", "18,22")
-	data.Add("timestamp", time.Now().Format(time.RFC3339))
+	data.Add("timestamp", record.StoppedAt.Format(time.RFC3339))
 
 	comment := fmt.Sprintf(
 		"Funeypot detected %d attempts in %s. Last by user %q, password %q, client %q.",
