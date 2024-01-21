@@ -144,12 +144,12 @@ func (h *Handler) reportRecord(ctx context.Context, record *model.Record) (int, 
 	data.Add("timestamp", time.Now().Format(time.RFC3339))
 
 	comment := fmt.Sprintf(
-		"Caught by funeypot, attempted to crack %d times within %s. Last attempt by user %s with password '%s' via client %s.",
+		"Funeypot detected %d attempts in %s. Last by user %q, password %q, client %q.",
 		record.Count,
 		record.Duration().Truncate(time.Second).String(),
 		record.User,
 		record.MaskedPassword(),
-		record.ClientVersion,
+		record.ShortClientVersion(),
 	)
 	data.Add("comment", comment)
 

@@ -33,6 +33,10 @@ func (r *Record) MaskedPassword() string {
 	return r.Password[:prefix] + strings.Repeat("*", len(r.Password)-prefix-suffix) + r.Password[len(r.Password)-suffix:]
 }
 
+func (r *Record) ShortClientVersion() string {
+	return strings.TrimPrefix(r.ClientVersion, "SSH-2.0-")
+}
+
 var _ boltutil.Storable = (*Record)(nil)
 
 func (r *Record) BoltBucket() []byte {
