@@ -1,0 +1,216 @@
+package server
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"net"
+	"time"
+
+	"github.com/wolfogre/funeypot/internal/app/config"
+	"github.com/wolfogre/funeypot/internal/app/model"
+	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
+	"github.com/wolfogre/funeypot/internal/pkg/logs"
+
+	"github.com/gliderlabs/ssh"
+	"gorm.io/gorm"
+)
+
+type SshServer struct {
+	server *ssh.Server
+	delay  time.Duration
+
+	db              *gorm.DB
+	abuseipdbClient *abuseipdb.Client
+
+	queue chan *SshRequest
+}
+
+func NewSshServer(cfg config.Ssh, db *gorm.DB, abuseipdbClient *abuseipdb.Client) *SshServer {
+	ret := &SshServer{
+		delay:           cfg.Delay,
+		db:              db,
+		abuseipdbClient: abuseipdbClient,
+		queue:           make(chan *SshRequest, 1000),
+	}
+	ret.server = &ssh.Server{
+		Version: "OpenSSH_8.0",
+		Addr:    cfg.Address,
+		Handler: func(session ssh.Session) {
+			_ = session.Exit(0)
+		},
+		PasswordHandler: ret.handlePassword,
+	}
+
+	return ret
+}
+
+func (s *SshServer) Startup(ctx context.Context, cancel context.CancelFunc) {
+	go func() {
+		logger := logs.From(ctx)
+		logger.Infof("start ssh server, listen on %s", s.server.Addr)
+		if err := s.server.ListenAndServe(); !errors.Is(err, ssh.ErrServerClosed) {
+			logger.Errorf("listen and serve: %v", err)
+		}
+		cancel()
+	}()
+}
+
+func (s *SshServer) Shutdown(ctx context.Context) error {
+	logs.From(ctx).Infof("shutdown ssh server")
+	return s.server.Shutdown(ctx)
+}
+
+func (s *SshServer) handlePassword(ctx ssh.Context, password string) bool {
+	logger := logs.From(ctx)
+
+	wait := time.After(s.delay)
+
+	request := &SshRequest{
+		Time:          time.Now(),
+		User:          ctx.User(),
+		Password:      password,
+		SessionId:     ctx.SessionID(),
+		ClientVersion: ctx.ClientVersion(),
+		RemoteAddr:    ctx.RemoteAddr().String(),
+	}
+	select {
+	case s.queue <- request:
+	default:
+		logger.Warnf("ssh queue full, drop requests, please increase queue size")
+	}
+
+	select {
+	case <-ctx.Done():
+	case <-wait:
+	}
+	return false
+}
+
+func (s *SshServer) handleQueue(ctx context.Context) {
+	for {
+		select {
+		case request := <-s.queue:
+			s.handleRequest(ctx, request)
+		case <-ctx.Done():
+			logs.From(ctx).Infof("handle queue done")
+			return
+		}
+	}
+}
+
+func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	defer cancel()
+
+	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
+	ip = net.ParseIP(ip).String()
+
+	logger := logs.From(ctx).With(
+		"ip", ip,
+		"session_id", request.ShortSessionId(),
+	)
+	ctx = logs.With(ctx, logger)
+
+	attempt := &model.SshAttempt{}
+	if err := s.db.Last(&attempt, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Errorf("get attempt: %v", err)
+		return
+	} else if time.Since(attempt.StoppedAt) > 24*time.Hour {
+		attempt = &model.SshAttempt{
+			Ip:        ip,
+			StartedAt: request.Time,
+		}
+	}
+
+	attempt.User = request.User
+	attempt.Password = request.Password
+	attempt.ClientVersion = request.ClientVersion
+	attempt.StoppedAt = request.Time
+	attempt.Count++ // TODO: use atomic
+
+	logger.With(
+		"count", attempt.Count,
+		"duration", attempt.Duration().String(),
+		"remote_addr", request.RemoteAddr,
+		"user", request.User,
+		"password", request.Password,
+		"client_version", request.ClientVersion,
+	).Infof("login")
+
+	if attempt.Id == 0 {
+		if err := s.db.Create(attempt).Error; err != nil {
+			logger.Errorf("create attempt: %v", err)
+		}
+	} else {
+		if err := s.db.Select("user", "password", "client_version", "stopped_at", "count").Updates(attempt).Error; err != nil {
+			logger.Errorf("update attempt: %v", err)
+		}
+	}
+
+	s.reportAttempt(ctx, attempt)
+}
+
+func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt) {
+	logger := logs.From(ctx)
+
+	if s.abuseipdbClient == nil {
+		return
+	}
+	if attempt.Count < 5 {
+		return
+	}
+	report := &model.AbuseipdbReport{}
+	if err := s.db.Last(&report, "ip = ?", attempt.Ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Errorf("get report: %v", err)
+		return
+	}
+	if time.Since(report.ReportedAt) < 20*time.Minute {
+		return
+	}
+
+	comment := fmt.Sprintf(
+		"Funeypot detected %d attempts in %s. Last by user %q, password %q, client %q.",
+		attempt.Count,
+		attempt.Duration().Truncate(time.Second).String(),
+		attempt.User,
+		attempt.MaskedPassword(),
+		attempt.ShortClientVersion(),
+	)
+
+	score, err := s.abuseipdbClient.ReportSsh(ctx, attempt.Ip, attempt.StartedAt, comment)
+	if err != nil {
+		logger.Errorf("report attempt: %v", err)
+		return
+	}
+	logger.Infof("reported, score: %d", score)
+	if !report.ReportedAt.IsZero() && report.Score != score {
+		logger.Infof("score changed, %d -> %d", report.Score, score)
+	}
+	newReport := &model.AbuseipdbReport{
+		Ip:         attempt.Ip,
+		ReportedAt: time.Now(),
+		Score:      score,
+	}
+	if err := s.db.Create(newReport).Error; err != nil {
+		logger.Errorf("create report: %v", err)
+	}
+}
+
+var _ Server = (*SshServer)(nil)
+
+type SshRequest struct {
+	Time          time.Time
+	User          string
+	Password      string
+	SessionId     string
+	ClientVersion string
+	RemoteAddr    string
+}
+
+func (r SshRequest) ShortSessionId() string {
+	if len(r.SessionId) > 8 {
+		return r.SessionId[:8]
+	}
+	return r.SessionId
+}
