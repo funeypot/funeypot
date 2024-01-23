@@ -9,11 +9,11 @@ func init() {
 }
 
 type AbuseipdbReport struct {
-	Id         int64  `gorm:"primaryKey autoIncrement"`
+	Id         int64
 	Ip         string `gorm:"size:39"`
 	ReportedAt time.Time
 	Score      int
 
-	CreatedAt time.Time
+	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 }

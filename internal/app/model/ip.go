@@ -11,14 +11,14 @@ func init() {
 }
 
 type IpGeo struct {
-	Ip          string `gorm:"primaryKey size:39"`
+	Ip          string `gorm:"primaryKey; size:39"`
 	CountryCode string `gorm:"size:2"`
 	Location    string `gorm:"size:255"`
 	Latitude    float64
 	Longitude   float64
 	Isp         string `gorm:"size:255"`
 
-	CreatedAt time.Time
+	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 }
 

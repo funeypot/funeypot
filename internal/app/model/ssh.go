@@ -10,7 +10,7 @@ func init() {
 }
 
 type SshAttempt struct {
-	Id            int64  `gorm:"primaryKey autoIncrement"`
+	Id            int64
 	Ip            string `gorm:"size:39"` // max ipv6 length
 	User          string `gorm:"size:255"`
 	Password      string `gorm:"size:255"`
@@ -19,7 +19,7 @@ type SshAttempt struct {
 	StoppedAt     time.Time
 	Count         int64
 
-	CreatedAt time.Time
+	CreatedAt time.Time `gorm:"<-:create"`
 	UpdatedAt time.Time
 }
 
