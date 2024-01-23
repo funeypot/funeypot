@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/wolfogre/funeypot/internal/app/config"
+	"github.com/wolfogre/funeypot/internal/pkg/logs"
 
 	"github.com/glebarez/sqlite"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 )
 
 func NewDatabase(cfg config.Database) (*gorm.DB, error) {
@@ -17,15 +17,14 @@ func NewDatabase(cfg config.Database) (*gorm.DB, error) {
 		err error
 	)
 
-	gormLogger := logger.Default.LogMode(logger.Info) // TODO: use logs
 	switch cfg.Driver {
 	case "sqlite":
 		db, err = gorm.Open(sqlite.Open(cfg.Dsn), &gorm.Config{
-			Logger: gormLogger,
+			Logger: logs.GormLogger{},
 		})
 	case "postgresql", "postgres":
 		db, err = gorm.Open(postgres.Open(cfg.Dsn), &gorm.Config{
-			Logger: gormLogger,
+			Logger: logs.GormLogger{},
 		})
 	default:
 		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Driver)
