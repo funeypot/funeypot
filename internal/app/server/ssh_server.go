@@ -219,7 +219,7 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 	logger := logs.From(ctx)
 
 	geo := &model.IpGeo{}
-	if err := s.db.Take(&geo, ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := s.db.Take(&geo, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 
