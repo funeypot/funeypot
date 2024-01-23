@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/wolfogre/funeypot/internal/app/config"
@@ -11,7 +12,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func NewDatabase(cfg config.Database) (*gorm.DB, error) {
+type Database struct {
+	db *gorm.DB
+}
+
+func NewDatabase(cfg config.Database) (*Database, error) {
 	var (
 		db  *gorm.DB
 		err error
@@ -38,7 +43,9 @@ func NewDatabase(cfg config.Database) (*gorm.DB, error) {
 		return nil, fmt.Errorf("auto migrate: %w", err)
 	}
 
-	return db, nil
+	return &Database{
+		db: db,
+	}, nil
 }
 
 var models []any
@@ -50,4 +57,24 @@ func registerModel(model any) {
 		}
 	}
 	models = append(models, model)
+}
+
+func (db *Database) Create(ctx context.Context, value any) error {
+	return db.db.WithContext(ctx).
+		Create(value).
+		Error
+}
+
+func (db *Database) Update(ctx context.Context, value any, fields ...string) error {
+	return db.db.WithContext(ctx).
+		Model(value).
+		Select(fields).
+		Updates(value).
+		Error
+}
+
+func (db *Database) Save(ctx context.Context, value any) error {
+	return db.db.WithContext(ctx).
+		Save(value).
+		Error
 }

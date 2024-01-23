@@ -14,20 +14,19 @@ import (
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 
 	"github.com/gliderlabs/ssh"
-	"gorm.io/gorm"
 )
 
 type SshServer struct {
 	server *ssh.Server
 	delay  time.Duration
 
-	db              *gorm.DB
+	db              *model.Database
 	abuseipdbClient *abuseipdb.Client
 
 	queue chan *SshRequest
 }
 
-func NewSshServer(cfg config.Ssh, db *gorm.DB, abuseipdbClient *abuseipdb.Client) *SshServer {
+func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb.Client) *SshServer {
 	ret := &SshServer{
 		delay:           cfg.Delay,
 		db:              db,
@@ -122,11 +121,12 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	)
 	ctx = logs.With(ctx, logger)
 
-	attempt := &model.SshAttempt{}
-	if err := s.db.WithContext(ctx).Last(&attempt, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logger.Errorf("get attempt: %v", err)
+	attempt, ok, err := s.db.LastSshAttempt(ctx, ip)
+	if err != nil {
+		logger.Errorf("get last attempt: %v", err)
 		return
-	} else if time.Since(attempt.StoppedAt) > 24*time.Hour {
+	}
+	if !ok || time.Since(attempt.StoppedAt) > 24*time.Hour {
 		attempt = &model.SshAttempt{
 			Ip:        ip,
 			StartedAt: request.Time,
@@ -161,11 +161,11 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	loginLogger.Infof("login")
 
 	if attempt.Id == 0 {
-		if err := s.db.WithContext(ctx).Create(attempt).Error; err != nil {
+		if err := s.db.Create(ctx, attempt); err != nil {
 			logger.Errorf("create attempt: %v", err)
 		}
 	} else {
-		if err := s.db.WithContext(ctx).Select("user", "password", "client_version", "stopped_at", "count").Updates(attempt).Error; err != nil {
+		if err := s.db.Update(ctx, attempt, "user", "password", "client_version", "stopped_at", "count"); err != nil {
 			logger.Errorf("update attempt: %v", err)
 		}
 	}
@@ -182,12 +182,12 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 	if attempt.Count < 5 {
 		return
 	}
-	report := &model.AbuseipdbReport{}
-	if err := s.db.WithContext(ctx).Last(&report, "ip = ?", attempt.Ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		logger.Errorf("get report: %v", err)
+	report, ok, err := s.db.LastAbuseipdbReport(ctx, attempt.Ip)
+	if err != nil {
+		logger.Errorf("get last report: %v", err)
 		return
 	}
-	if time.Since(report.ReportedAt) < 20*time.Minute {
+	if ok && time.Since(report.ReportedAt) < 20*time.Minute {
 		return
 	}
 
@@ -214,7 +214,7 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 		ReportedAt: time.Now(),
 		Score:      score,
 	}
-	if err := s.db.WithContext(ctx).Create(newReport).Error; err != nil {
+	if err := s.db.Create(ctx, newReport); err != nil {
 		logger.Errorf("create report: %v", err)
 	}
 }
@@ -222,12 +222,12 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, error) {
 	logger := logs.From(ctx)
 
-	geo := &model.IpGeo{}
-	if err := s.db.WithContext(ctx).Take(&geo, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, err
+	geo, ok, err := s.db.TaskIpGeo(ctx, ip)
+	if err != nil {
+		return nil, fmt.Errorf("get ip geo: %w", err)
 	}
 
-	if geo.Ip != "" && time.Since(geo.CreatedAt) < 24*time.Hour {
+	if ok && time.Since(geo.CreatedAt) < 24*time.Hour {
 		return geo, nil
 	}
 
@@ -239,7 +239,7 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 	geo = (&model.IpGeo{
 		Ip: ip,
 	}).FillIpapiResponse(result)
-	if err := s.db.WithContext(ctx).Save(geo).Error; err != nil {
+	if err := s.db.Save(ctx, geo); err != nil {
 		logger.Errorf("save ip geo: %v", err)
 		// go on
 	}
