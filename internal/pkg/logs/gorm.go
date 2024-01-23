@@ -41,9 +41,9 @@ func (l GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql s
 
 	switch {
 	case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
-		lgr.Error("%v: %s", err, sql)
+		lgr.Errorf("%v: %s", err, sql)
 	case duration > time.Second:
-		lgr.Warn("slow: %s", sql)
+		lgr.Warnf("slow: %s", sql)
 	default:
 		lgr.Debug(sql)
 	}
