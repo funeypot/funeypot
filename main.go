@@ -4,31 +4,22 @@ import (
 	"context"
 	"errors"
 	"flag"
-	"net/http"
-	"os"
-	"os/signal"
-	"path/filepath"
-	"time"
-
+	"github.com/gliderlabs/ssh"
+	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/handler"
 	"github.com/wolfogre/funeypot/internal/app/model"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
-
-	"github.com/gliderlabs/ssh"
+	"net/http"
+	"os"
+	"os/signal"
 )
 
 var (
-	addr         = ":2222"
-	delay        = 2 * time.Second
-	abuseIpdbKey = ""
-	dataDir      = "/tmp/funeypot"
+	configFile = "config.yaml"
 )
 
 func init() {
-	flag.StringVar(&addr, "addr", addr, "address to listen")
-	flag.DurationVar(&delay, "delay", delay, "delay to login")
-	flag.StringVar(&abuseIpdbKey, "abuseipdb-key", abuseIpdbKey, "abuseipdb key")
-	flag.StringVar(&dataDir, "data-dir", dataDir, "data dir")
+	flag.StringVar(&configFile, "c", configFile, "config file")
 }
 
 func main() {
@@ -41,25 +32,25 @@ func main() {
 	defer cancel()
 	ctx = logs.With(ctx, logger)
 
-	if err := os.MkdirAll(dataDir, 0755); err != nil {
-		logger.Fatalf("mkdir: %v", err)
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		logs.From(ctx).Fatalf("load config: %v", err)
 		return
 	}
 
-	db, err := model.NewDatabase(ctx, filepath.Join(dataDir, "funeypot.db"))
+	db, err := model.NewDatabase(cfg.Database)
 	if err != nil {
 		logs.From(ctx).Fatalf("new database: %v", err)
 		return
 	}
-	defer db.Close()
 
-	h := handler.New(ctx, delay, abuseIpdbKey, db)
+	h := handler.New(ctx, cfg.Ssh.Delay, cfg.Abuseipdb.Key, db)
 
-	logger.With("addr", addr, "delay", delay.String()).Infof("start listening")
+	logger.With("addr", cfg.Ssh.Address, "delay", cfg.Ssh.Delay.String()).Infof("start listening")
 
 	sever := &ssh.Server{
 		Version: "OpenSSH_8.0",
-		Addr:    addr,
+		Addr:    cfg.Ssh.Address,
 		Handler: func(session ssh.Session) {
 			_ = session.Exit(0)
 		},

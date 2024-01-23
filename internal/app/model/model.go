@@ -1,48 +1,45 @@
 package model
 
 import (
-	"strings"
-	"time"
-
-	"github.com/gochore/boltutil"
+	"fmt"
+	"github.com/glebarez/sqlite"
+	"github.com/wolfogre/funeypot/internal/app/config"
+	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
-type Record struct {
-	Ip            string    `json:"ip"`
-	User          string    `json:"user"`
-	Password      string    `json:"password"`
-	ClientVersion string    `json:"client_version"`
-	StartedAt     time.Time `json:"started_at"`
-	StoppedAt     time.Time `json:"stopped_at"`
-	Count         int       `json:"count"`
-	ReportedAt    time.Time `json:"reported_at"`
-	Score         int       `json:"score"`
-}
-
-func (r *Record) Duration() time.Duration {
-	return r.StoppedAt.Sub(r.StartedAt)
-}
-
-func (r *Record) MaskedPassword() string {
-	prefix := len(r.Password) / 3
-	if prefix > 4 {
-		prefix = 4
+func NewDatabase(cfg config.Database) (*gorm.DB, error) {
+	var (
+		db  *gorm.DB
+		err error
+	)
+	switch cfg.Driver {
+	case sqlite.DriverName:
+		db, err = gorm.Open(sqlite.Open(cfg.Dsn), &gorm.Config{
+			Logger: logger.Default.LogMode(logger.Info), // TODO: use logs
+		})
+	default:
+		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Driver)
 	}
-	suffix := prefix
 
-	return r.Password[:prefix] + strings.Repeat("*", len(r.Password)-prefix-suffix) + r.Password[len(r.Password)-suffix:]
+	if err != nil {
+		return nil, fmt.Errorf("open database: %w", err)
+	}
+
+	if err := db.AutoMigrate(models...); err != nil {
+		return nil, fmt.Errorf("auto migrate: %w", err)
+	}
+
+	return db, nil
 }
 
-func (r *Record) ShortClientVersion() string {
-	return strings.TrimPrefix(r.ClientVersion, "SSH-2.0-")
-}
+var models []any
 
-var _ boltutil.Storable = (*Record)(nil)
-
-func (r *Record) BoltBucket() []byte {
-	return []byte("records")
-}
-
-func (r *Record) BoltKey() []byte {
-	return []byte(r.Ip)
+func registerModel(model any) {
+	for _, m := range models {
+		if fmt.Sprintf("%T", m) == fmt.Sprintf("%T", model) {
+			panic(fmt.Sprintf("model %T already registered", model))
+		}
+	}
+	models = append(models, model)
 }

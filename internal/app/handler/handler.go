@@ -15,17 +15,17 @@ import (
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 
 	"github.com/gliderlabs/ssh"
-	"github.com/gochore/boltutil"
+	"gorm.io/gorm"
 )
 
 type Handler struct {
 	delay        time.Duration
 	abuseIpdbKey string
-	db           *boltutil.DB
+	db           *gorm.DB
 	queue        chan *Request
 }
 
-func New(ctx context.Context, delay time.Duration, abuseIpdbKey string, db *boltutil.DB) *Handler {
+func New(ctx context.Context, delay time.Duration, abuseIpdbKey string, db *gorm.DB) *Handler {
 	ret := &Handler{
 		delay:        delay,
 		abuseIpdbKey: abuseIpdbKey,
@@ -88,6 +88,8 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	defer cancel()
 
 	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
+	ip = net.ParseIP(ip).String()
+
 	logger := logs.From(ctx).With(
 		"ip", ip,
 		"remote_addr", request.RemoteAddr,
@@ -97,59 +99,83 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 		"client_version", request.ClientVersion,
 	)
 
-	record := &model.Record{
-		Ip:        ip,
-		StartedAt: request.Time,
-	}
-	if err := h.db.Get(record); err != nil && !errors.Is(err, boltutil.ErrNotExist) {
-		logger.Errorf("get record: %v", err)
+	attempt := &model.SshAttempt{}
+	if err := h.db.Last(&attempt, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		logger.Errorf("get attempt: %v", err)
 		return
+	} else if time.Since(attempt.StoppedAt) > 24*time.Hour {
+		attempt = &model.SshAttempt{
+			Ip:        ip,
+			StartedAt: request.Time,
+		}
 	}
 
-	record.User = request.User
-	record.Password = request.Password
-	record.ClientVersion = request.ClientVersion
-	record.StoppedAt = request.Time
-	record.Count++
+	attempt.User = request.User
+	attempt.Password = request.Password
+	attempt.ClientVersion = request.ClientVersion
+	attempt.StoppedAt = request.Time
+	attempt.Count++ // TODO: use atomic
 	logger = logger.With(
-		"count", record.Count,
-		"duration", record.Duration().String(),
+		"count", attempt.Count,
+		"duration", attempt.Duration().String(),
 	)
 
 	logger.Infof("login")
 
-	if h.abuseIpdbKey != "" && record.Count >= 5 && time.Since(record.ReportedAt) > 20*time.Minute {
-		score, err := h.reportRecord(ctx, record)
-		if err != nil {
-			logger.Errorf("report record: %v", err)
-		} else {
-			logger.Infof("reported, score: %d", score)
-			if !record.ReportedAt.IsZero() && record.Score != score {
-				logger.Infof("score changed, %d -> %d", record.Score, score)
-			}
-			record.ReportedAt = time.Now()
-			record.Score = score
+	if attempt.Id == 0 {
+		if err := h.db.Create(attempt).Error; err != nil {
+			logger.Errorf("create attempt: %v", err)
+		}
+	} else {
+		if err := h.db.Select("user", "password", "client_version", "stopped_at", "count").Updates(attempt).Error; err != nil {
+			logger.Errorf("update attempt: %v", err)
 		}
 	}
 
-	if err := h.db.Put(record); err != nil {
-		logger.Errorf("put record: %v", err)
+	if h.abuseIpdbKey != "" && attempt.Count >= 5 {
+		report := &model.AbuseipdbReport{}
+		if err := h.db.Last(&report, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			logger.Errorf("get report: %v", err)
+			return
+		}
+		if time.Since(report.ReportedAt) < 20*time.Minute {
+			logger.Infof("already reported")
+			return
+		}
+		score, err := h.reportRecord(ctx, attempt)
+		if err != nil {
+			logger.Errorf("report attempt: %v", err)
+			return
+		}
+		logger.Infof("reported, score: %d", score)
+		if !report.ReportedAt.IsZero() && report.Score != score {
+			logger.Infof("score changed, %d -> %d", report.Score, score)
+		}
+		newReport := &model.AbuseipdbReport{
+			Ip:         ip,
+			ReportedAt: time.Now(),
+			Score:      score,
+		}
+		if err := h.db.Create(newReport).Error; err != nil {
+			logger.Errorf("create report: %v", err)
+		}
 	}
+
 }
 
-func (h *Handler) reportRecord(ctx context.Context, record *model.Record) (int, error) {
+func (h *Handler) reportRecord(ctx context.Context, attempt *model.SshAttempt) (int, error) {
 	data := url.Values{}
-	data.Set("ip", record.Ip)
+	data.Set("ip", attempt.Ip)
 	data.Add("categories", "18,22")
-	data.Add("timestamp", record.StoppedAt.Format(time.RFC3339))
+	data.Add("timestamp", attempt.StoppedAt.Format(time.RFC3339))
 
 	comment := fmt.Sprintf(
 		"Funeypot detected %d attempts in %s. Last by user %q, password %q, client %q.",
-		record.Count,
-		record.Duration().Truncate(time.Second).String(),
-		record.User,
-		record.MaskedPassword(),
-		record.ShortClientVersion(),
+		attempt.Count,
+		attempt.Duration().Truncate(time.Second).String(),
+		attempt.User,
+		attempt.MaskedPassword(),
+		attempt.ShortClientVersion(),
 	)
 	data.Add("comment", comment)
 

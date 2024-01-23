@@ -10,7 +10,7 @@ import (
 type Config struct {
 	Ssh       Ssh       `yaml:"ssh"`
 	Database  Database  `yaml:"database"`
-	AbuseIpdb AbuseIpdb `yaml:"abuse_ipdb"`
+	Abuseipdb Abuseipdb `yaml:"abuseipdb"`
 }
 
 type Ssh struct {
@@ -50,12 +50,12 @@ func (d Database) Validate() error {
 	return nil
 }
 
-type AbuseIpdb struct {
+type Abuseipdb struct {
 	Enabled bool   `yaml:"enabled"`
 	Key     string `json:"key"`
 }
 
-func (a AbuseIpdb) Validate() error {
+func (a Abuseipdb) Validate() error {
 	if a.Enabled {
 		if a.Key == "" {
 			return fmt.Errorf("abuse ipdb key is required when enabled")
@@ -76,6 +76,11 @@ func Load(file string) (*Config, error) {
 	if err := encoder.Decode(ret); err != nil {
 		return nil, fmt.Errorf("decode yaml: %w", err)
 	}
+
+	if err := ret.Validate(); err != nil {
+		return nil, fmt.Errorf("validate config: %w", err)
+	}
+
 	return ret, nil
 }
 
@@ -86,7 +91,7 @@ func (c *Config) Validate() error {
 	if err := c.Database.Validate(); err != nil {
 		return fmt.Errorf("database: %w", err)
 	}
-	if err := c.AbuseIpdb.Validate(); err != nil {
+	if err := c.Abuseipdb.Validate(); err != nil {
 		return fmt.Errorf("abuse ipdb: %w", err)
 	}
 	return nil
