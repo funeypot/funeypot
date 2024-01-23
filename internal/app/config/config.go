@@ -10,7 +10,9 @@ import (
 
 type Config struct {
 	Ssh       Ssh       `yaml:"ssh"`
+	Http      Http      `yaml:"http"`
 	Database  Database  `yaml:"database"`
+	Dashboard Dashboard `yaml:"dashboard"`
 	Abuseipdb Abuseipdb `yaml:"abuseipdb"`
 }
 
@@ -29,6 +31,17 @@ func (s Ssh) Validate() error {
 	return nil
 }
 
+type Http struct {
+	Address string `yaml:"address"`
+}
+
+func (h Http) Validate() error {
+	if h.Address == "" {
+		return fmt.Errorf("http address is required")
+	}
+	return nil
+}
+
 type Database struct {
 	Driver string `yaml:"driver"`
 	Dsn    string `yaml:"dsn"`
@@ -41,6 +54,25 @@ func (d Database) Validate() error {
 
 	if d.Dsn == "" {
 		return fmt.Errorf("database dsn is required")
+	}
+	return nil
+}
+
+type Dashboard struct {
+	Enabled  bool   `yaml:"enabled"`
+	Username string `yaml:"username"`
+	Password string `yaml:"password"`
+}
+
+func (d Dashboard) Validate() error {
+	if !d.Enabled {
+		return nil
+	}
+	if d.Username == "" {
+		return fmt.Errorf("dashboard username is required")
+	}
+	if len(d.Password) < 8 {
+		return fmt.Errorf("dashboard password is required and must be at least 8 characters")
 	}
 	return nil
 }
@@ -83,8 +115,14 @@ func (c *Config) Validate() error {
 	if err := c.Ssh.Validate(); err != nil {
 		return fmt.Errorf("ssh: %w", err)
 	}
+	if err := c.Http.Validate(); err != nil {
+		return fmt.Errorf("http: %w", err)
+	}
 	if err := c.Database.Validate(); err != nil {
 		return fmt.Errorf("database: %w", err)
+	}
+	if err := c.Dashboard.Validate(); err != nil {
+		return fmt.Errorf("dashboard: %w", err)
 	}
 	if err := c.Abuseipdb.Validate(); err != nil {
 		return fmt.Errorf("abuse ipdb: %w", err)

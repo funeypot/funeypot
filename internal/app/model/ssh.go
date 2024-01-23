@@ -24,7 +24,7 @@ type SshAttempt struct {
 	Count         int64
 
 	CreatedAt time.Time `gorm:"<-:create"`
-	UpdatedAt time.Time
+	UpdatedAt time.Time `gorm:"index"`
 }
 
 func (r *SshAttempt) Duration() time.Duration {
@@ -56,4 +56,33 @@ func (db *Database) LastSshAttempt(ctx context.Context, ip string) (*SshAttempt,
 		return nil, false, err
 	}
 	return attempt, true, nil
+}
+
+func (db *Database) ScanSshAttempt(ctx context.Context, updatedAfter time.Time, f func(attempt *SshAttempt, geo *IpGeo) bool) error {
+	rows, err := db.db.
+		WithContext(ctx).
+		Model(&SshAttempt{}).
+		Select("ssh_attempts.*, ip_geos.*").
+		Joins("LEFT JOIN ip_geos ON ssh_attempts.ip = ip_geos.ip").
+		Where("ssh_attempts.updated_at > ?", updatedAfter).
+		Order("ssh_attempts.updated_at").
+		Rows()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		result := &struct {
+			*SshAttempt
+			*IpGeo
+		}{}
+		if err := db.db.ScanRows(rows, result); err != nil {
+			return err
+		}
+		if !f(result.SshAttempt, result.IpGeo) {
+			break
+		}
+	}
+	return nil
 }

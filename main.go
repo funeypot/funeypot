@@ -8,6 +8,7 @@ import (
 	"syscall"
 
 	"github.com/wolfogre/funeypot/internal/app/config"
+	"github.com/wolfogre/funeypot/internal/app/dashboard"
 	"github.com/wolfogre/funeypot/internal/app/model"
 	"github.com/wolfogre/funeypot/internal/app/server"
 	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
@@ -49,7 +50,13 @@ func main() {
 	sshServer := server.NewSshServer(cfg.Ssh, db, abuseipdbClient)
 	sshServer.Startup(ctx, cancel)
 
+	dashboardServer := dashboard.NewServer(cfg.Dashboard, db)
+
+	httpServer := server.NewHttpServer(cfg.Http, dashboardServer)
+	httpServer.Startup(ctx, cancel)
+
 	<-ctx.Done()
 	logger.Infof("shutdown")
 	_ = sshServer.Shutdown(ctx)
+	_ = httpServer.Shutdown(ctx)
 }

@@ -26,6 +26,8 @@ type SshServer struct {
 	queue chan *SshRequest
 }
 
+var _ Server = (*SshServer)(nil)
+
 func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb.Client) *SshServer {
 	ret := &SshServer{
 		delay:           cfg.Delay,
@@ -245,8 +247,6 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 	}
 	return geo, nil
 }
-
-var _ Server = (*SshServer)(nil)
 
 type SshRequest struct {
 	Time          time.Time
