@@ -119,7 +119,7 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	ctx = logs.With(ctx, logger)
 
 	attempt := &model.SshAttempt{}
-	if err := s.db.Last(&attempt, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := s.db.WithContext(ctx).Last(&attempt, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logger.Errorf("get attempt: %v", err)
 		return
 	} else if time.Since(attempt.StoppedAt) > 24*time.Hour {
@@ -157,11 +157,11 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	loginLogger.Infof("login")
 
 	if attempt.Id == 0 {
-		if err := s.db.Create(attempt).Error; err != nil {
+		if err := s.db.WithContext(ctx).Create(attempt).Error; err != nil {
 			logger.Errorf("create attempt: %v", err)
 		}
 	} else {
-		if err := s.db.Select("user", "password", "client_version", "stopped_at", "count").Updates(attempt).Error; err != nil {
+		if err := s.db.WithContext(ctx).Select("user", "password", "client_version", "stopped_at", "count").Updates(attempt).Error; err != nil {
 			logger.Errorf("update attempt: %v", err)
 		}
 	}
@@ -179,7 +179,7 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 		return
 	}
 	report := &model.AbuseipdbReport{}
-	if err := s.db.Last(&report, "ip = ?", attempt.Ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := s.db.WithContext(ctx).Last(&report, "ip = ?", attempt.Ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		logger.Errorf("get report: %v", err)
 		return
 	}
@@ -210,7 +210,7 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 		ReportedAt: time.Now(),
 		Score:      score,
 	}
-	if err := s.db.Create(newReport).Error; err != nil {
+	if err := s.db.WithContext(ctx).Create(newReport).Error; err != nil {
 		logger.Errorf("create report: %v", err)
 	}
 }
@@ -219,7 +219,7 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 	logger := logs.From(ctx)
 
 	geo := &model.IpGeo{}
-	if err := s.db.Take(&geo, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := s.db.WithContext(ctx).Take(&geo, "ip = ?", ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
 
@@ -232,15 +232,10 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 		return nil, err
 	}
 
-	geo = &model.IpGeo{
-		Ip:          ip,
-		CountryCode: result.CountryCode,
-		Location:    result.Location(),
-		Latitude:    result.Lat,
-		Longitude:   result.Lon,
-		Isp:         result.Isp,
-	}
-	if err := s.db.Save(geo).Error; err != nil {
+	geo = (&model.IpGeo{
+		Ip: ip,
+	}).FillIpapiResponse(result)
+	if err := s.db.WithContext(ctx).Save(geo).Error; err != nil {
 		logger.Errorf("save ip geo: %v", err)
 		// go on
 	}

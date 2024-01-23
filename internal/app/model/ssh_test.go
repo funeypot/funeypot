@@ -4,7 +4,7 @@ import (
 	"testing"
 )
 
-func TestRecord_MaskedPassword(t *testing.T) {
+func TestSshAttempt_MaskedPassword(t *testing.T) {
 	tests := []struct {
 		password string
 		want     string
@@ -44,7 +44,7 @@ func TestRecord_MaskedPassword(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.password, func(t *testing.T) {
-			r := &Record{
+			r := &SshAttempt{
 				Password: tt.password,
 			}
 			if got := r.MaskedPassword(); got != tt.want {
