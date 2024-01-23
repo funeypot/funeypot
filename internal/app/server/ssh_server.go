@@ -96,7 +96,9 @@ func (s *SshServer) handlePassword(ctx ssh.Context, password string) bool {
 func (s *SshServer) handleQueue(ctx context.Context) {
 	logger := logs.From(ctx)
 	for {
-		logger.Debugf("queue length: %v", len(s.queue))
+		if l := len(s.queue); l > 0 {
+			logger.Debugf("queue lag: %d", l)
+		}
 		select {
 		case request := <-s.queue:
 			s.handleRequest(ctx, request)
