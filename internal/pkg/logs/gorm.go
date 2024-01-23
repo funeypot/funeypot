@@ -37,15 +37,15 @@ func (l GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (sql s
 	duration := time.Since(begin)
 	lgr = lgr.With("duration", duration.String())
 	sql, rows := fc()
-	lgr = lgr.With("sql", sql, "rows", rows)
+	lgr = lgr.With("rows", rows)
 
 	switch {
 	case err != nil && !errors.Is(err, gorm.ErrRecordNotFound):
-		lgr.Error(err)
+		lgr.Error("%v: %s", err, sql)
 	case duration > time.Second:
-		lgr.Warn("slow")
+		lgr.Warn("slow: %s", sql)
 	default:
-		lgr.Debug("ok")
+		lgr.Debug(sql)
 	}
 }
 

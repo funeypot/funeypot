@@ -13,9 +13,7 @@ type Logger = *zap.SugaredLogger
 var def Logger
 
 func init() {
-	config := zap.NewProductionConfig()
-	config.Level = zap.NewAtomicLevelAt(zap.DebugLevel)
-	config.EncoderConfig.EncodeTime = zapcore.ISO8601TimeEncoder
+	config := zap.NewDevelopmentConfig()
 	logger, err := config.Build(zap.AddStacktrace(zapcore.DPanicLevel))
 	if err != nil {
 		panic(fmt.Errorf("init logger: %w", err))
