@@ -2,8 +2,11 @@ package model
 
 import (
 	"fmt"
-	"github.com/glebarez/sqlite"
+
 	"github.com/wolfogre/funeypot/internal/app/config"
+
+	"github.com/glebarez/sqlite"
+	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -13,10 +16,16 @@ func NewDatabase(cfg config.Database) (*gorm.DB, error) {
 		db  *gorm.DB
 		err error
 	)
+
+	gormLogger := logger.Default.LogMode(logger.Info) // TODO: use logs
 	switch cfg.Driver {
-	case sqlite.DriverName:
+	case "sqlite":
 		db, err = gorm.Open(sqlite.Open(cfg.Dsn), &gorm.Config{
-			Logger: logger.Default.LogMode(logger.Info), // TODO: use logs
+			Logger: gormLogger,
+		})
+	case "postgresql", "postgres":
+		db, err = gorm.Open(postgres.Open(cfg.Dsn), &gorm.Config{
+			Logger: gormLogger,
 		})
 	default:
 		return nil, fmt.Errorf("unsupported database driver: %s", cfg.Driver)
