@@ -55,6 +55,11 @@ func (s *SshServer) Startup(ctx context.Context, cancel context.CancelFunc) {
 		}
 		cancel()
 	}()
+	go func() {
+		s.handleQueue(ctx)
+		logs.From(ctx).Infof("handle queue done")
+		cancel()
+	}()
 }
 
 func (s *SshServer) Shutdown(ctx context.Context) error {
