@@ -51,6 +51,7 @@ func main() {
 		logs.From(ctx).Fatalf("new database: %v", err)
 		return
 	}
+	defer db.Close()
 
 	h := handler.New(ctx, delay, abuseIpdbKey, db)
 
