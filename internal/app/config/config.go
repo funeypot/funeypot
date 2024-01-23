@@ -2,9 +2,10 @@ package config
 
 import (
 	"fmt"
-	"gopkg.in/yaml.v3"
 	"os"
 	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
@@ -36,12 +37,6 @@ type Database struct {
 func (d Database) Validate() error {
 	if d.Driver == "" {
 		return fmt.Errorf("database driver is required")
-	}
-
-	switch d.Driver {
-	case "sqlite":
-	default:
-		return fmt.Errorf("unsupported database driver: %s", d.Driver)
 	}
 
 	if d.Dsn == "" {
