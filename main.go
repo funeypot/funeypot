@@ -5,6 +5,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/model"
@@ -27,7 +28,7 @@ func main() {
 
 	logger := logs.Default()
 
-	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, os.Kill)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 	ctx = logs.With(ctx, logger)
 
