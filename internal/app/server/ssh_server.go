@@ -218,7 +218,7 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 		return nil, err
 	}
 
-	if geo.Ip != "" {
+	if geo.Ip != "" && time.Since(geo.CreatedAt) < 24*time.Hour {
 		return geo, nil
 	}
 
@@ -235,8 +235,8 @@ func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, erro
 		Longitude:   result.Lon,
 		Isp:         result.Isp,
 	}
-	if err := s.db.Create(geo).Error; err != nil {
-		logger.Errorf("create ip geo: %v", err)
+	if err := s.db.Save(geo).Error; err != nil {
+		logger.Errorf("save ip geo: %v", err)
 		// go on
 	}
 	return geo, nil

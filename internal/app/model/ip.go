@@ -1,6 +1,8 @@
 package model
 
 import (
+	"time"
+
 	"github.com/wolfogre/funeypot/internal/pkg/ipapi"
 )
 
@@ -15,6 +17,9 @@ type IpGeo struct {
 	Latitude    float64
 	Longitude   float64
 	Isp         string `gorm:"size:255"`
+
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 func (m *IpGeo) FillIpapiResponse(r *ipapi.Response) *IpGeo {
