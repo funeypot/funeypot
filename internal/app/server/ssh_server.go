@@ -10,6 +10,7 @@ import (
 	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/model"
 	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
+	"github.com/wolfogre/funeypot/internal/pkg/ipapi"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 
 	"github.com/gliderlabs/ssh"
@@ -129,14 +130,26 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	attempt.StoppedAt = request.Time
 	attempt.Count++ // TODO: use atomic
 
-	logger.With(
+	loginLogger := logger.With(
 		"count", attempt.Count,
 		"duration", attempt.Duration().String(),
 		"remote_addr", request.RemoteAddr,
 		"user", request.User,
 		"password", request.Password,
 		"client_version", request.ClientVersion,
-	).Infof("login")
+	)
+
+	geo, err := s.getIpGeo(ctx, ip)
+	if err != nil {
+		loginLogger.Errorf("get ip geo: %v", err)
+	} else {
+		loginLogger = loginLogger.With(
+			"location", geo.Location,
+			"isp", geo.Isp,
+		)
+	}
+
+	loginLogger.Infof("login")
 
 	if attempt.Id == 0 {
 		if err := s.db.Create(attempt).Error; err != nil {
@@ -195,6 +208,38 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 	if err := s.db.Create(newReport).Error; err != nil {
 		logger.Errorf("create report: %v", err)
 	}
+}
+
+func (s *SshServer) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, error) {
+	logger := logs.From(ctx)
+
+	geo := &model.IpGeo{}
+	if err := s.db.Take(&geo, ip).Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, err
+	}
+
+	if geo.Ip != "" {
+		return geo, nil
+	}
+
+	result, err := ipapi.Query(ctx, ip)
+	if err != nil {
+		return nil, err
+	}
+
+	geo = &model.IpGeo{
+		Ip:          ip,
+		CountryCode: result.CountryCode,
+		Location:    result.Location(),
+		Latitude:    result.Lat,
+		Longitude:   result.Lon,
+		Isp:         result.Isp,
+	}
+	if err := s.db.Create(geo).Error; err != nil {
+		logger.Errorf("create ip geo: %v", err)
+		// go on
+	}
+	return geo, nil
 }
 
 var _ Server = (*SshServer)(nil)

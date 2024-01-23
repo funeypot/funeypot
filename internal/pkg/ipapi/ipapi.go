@@ -2,27 +2,21 @@ package ipapi
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
-	"net/http"
 	"strings"
+
+	"github.com/go-resty/resty/v2"
 )
 
 func Query(ctx context.Context, ip string) (*Response, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://ip-api.com/json/%s?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query", ip), nil)
-	if err != nil {
-		return nil, fmt.Errorf("new request: %w", err)
-	}
+	result := &Response{}
 
-	resp, err := http.DefaultClient.Do(req)
+	_, err := resty.New().R().
+		SetContext(ctx).
+		SetResult(result).
+		Get(fmt.Sprintf("http://ip-api.com/json/%s?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query", ip))
 	if err != nil {
 		return nil, fmt.Errorf("do request: %w", err)
-	}
-	defer resp.Body.Close()
-
-	result := &Response{}
-	if err := json.NewDecoder(resp.Body).Decode(result); err != nil {
-		return nil, fmt.Errorf("decode response: %w", err)
 	}
 
 	if result.Status != "success" {
