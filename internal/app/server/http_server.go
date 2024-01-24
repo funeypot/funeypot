@@ -8,8 +8,6 @@ import (
 	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/dashboard"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
-
-	"github.com/gliderlabs/ssh"
 )
 
 type HttpServer struct {
@@ -34,7 +32,7 @@ func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
 	go func() {
 		logger := logs.From(ctx)
 		logger.Infof("start http server, listen on %s", s.server.Addr)
-		if err := s.server.ListenAndServe(); !errors.Is(err, ssh.ErrServerClosed) {
+		if err := s.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			logger.Errorf("listen and serve: %v", err)
 		}
 		cancel()
