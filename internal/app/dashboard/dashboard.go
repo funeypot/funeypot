@@ -39,6 +39,8 @@ type apiPoint struct {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	if r.Method != http.MethodGet || r.URL.Path != "/api/points" {
 		http.NotFound(w, r)
 		return
