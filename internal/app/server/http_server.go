@@ -43,3 +43,5 @@ func (s *HttpServer) Shutdown(ctx context.Context) error {
 	logs.From(ctx).Infof("shutdown http server")
 	return s.server.Shutdown(ctx)
 }
+
+// TODO: report attempts

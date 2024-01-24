@@ -8,6 +8,8 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
+// TODO: add log level
+
 type Logger = *zap.SugaredLogger
 
 var def Logger

@@ -42,7 +42,7 @@ func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb
 	}
 	ret.server = &ssh.Server{
 		HostSigners: []ssh.Signer{signer},
-		Version:     "OpenSSH_8.0",
+		Version:     "OpenSSH_8.0", // TODO: random version
 		Addr:        cfg.Address,
 		Handler: func(session ssh.Session) {
 			_ = session.Exit(0)
