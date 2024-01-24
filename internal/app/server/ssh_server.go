@@ -12,6 +12,7 @@ import (
 	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
 	"github.com/wolfogre/funeypot/internal/pkg/ipapi"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/wolfogre/funeypot/internal/pkg/sshkey"
 
 	"github.com/gliderlabs/ssh"
 )
@@ -28,16 +29,21 @@ type SshServer struct {
 
 var _ Server = (*SshServer)(nil)
 
-func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb.Client) *SshServer {
+func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb.Client) (*SshServer, error) {
 	ret := &SshServer{
 		delay:           cfg.Delay,
 		db:              db,
 		abuseipdbClient: abuseipdbClient,
 		queue:           make(chan *SshRequest, 1000),
 	}
+	signer, err := sshkey.GenerateSigner(cfg.KeySeed)
+	if err != nil {
+		return nil, fmt.Errorf("generate signer: %w", err)
+	}
 	ret.server = &ssh.Server{
-		Version: "OpenSSH_8.0",
-		Addr:    cfg.Address,
+		HostSigners: []ssh.Signer{signer},
+		Version:     "OpenSSH_8.0",
+		Addr:        cfg.Address,
 		Handler: func(session ssh.Session) {
 			_ = session.Exit(0)
 		},
@@ -51,7 +57,7 @@ func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb
 		},
 	}
 
-	return ret
+	return ret, nil
 }
 
 func (s *SshServer) Startup(ctx context.Context, cancel context.CancelFunc) {

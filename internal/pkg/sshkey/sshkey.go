@@ -7,7 +7,17 @@ import (
 	"encoding/binary"
 	mathrand "math/rand"
 	"runtime"
+
+	"golang.org/x/crypto/ssh"
 )
+
+func GenerateSigner(seed string) (ssh.Signer, error) {
+	key, err := rsa.GenerateKey(newRandReader(seed), 2048)
+	if err != nil {
+		return nil, err
+	}
+	return ssh.NewSignerFromKey(key)
+}
 
 func GenerateKey(seed string) (*rsa.PrivateKey, error) {
 	return rsa.GenerateKey(newRandReader(seed), 2048)

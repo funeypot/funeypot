@@ -19,6 +19,7 @@ type Config struct {
 type Ssh struct {
 	Address string        `yaml:"address"`
 	Delay   time.Duration `yaml:"delay"`
+	KeySeed string        `yaml:"key_seed"`
 }
 
 func (s Ssh) Validate() error {
