@@ -41,7 +41,14 @@ func NewSshServer(cfg config.Ssh, db *model.Database, abuseipdbClient *abuseipdb
 		Handler: func(session ssh.Session) {
 			_ = session.Exit(0)
 		},
+		PublicKeyHandler: func(ctx ssh.Context, key ssh.PublicKey) bool {
+			logs.From(ctx).Infof("public key: %v", key.Type())
+			return false
+		},
 		PasswordHandler: ret.handlePassword,
+		ConnectionFailedCallback: func(conn net.Conn, reason error) {
+			logs.Default().Infof("connection %s failed: %v", conn.RemoteAddr(), reason)
+		},
 	}
 
 	return ret
