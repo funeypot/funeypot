@@ -208,7 +208,7 @@ func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt
 		return
 	}
 	logger.Infof("reported, score: %d", score)
-	if !report.ReportedAt.IsZero() && report.Score != score {
+	if report != nil && report.Score != score {
 		logger.Infof("score changed, %d -> %d", report.Score, score)
 	}
 	newReport := &model.AbuseipdbReport{
