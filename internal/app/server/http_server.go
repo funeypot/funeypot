@@ -19,13 +19,25 @@ type HttpServer struct {
 var _ Server = (*HttpServer)(nil)
 
 func NewHttpServer(cfg config.Http, dashboardServer *dashboard.Server) *HttpServer {
-	ret := &HttpServer{}
+	ret := &HttpServer{
+		dashboardServer: dashboardServer,
+	}
 	ret.server = &http.Server{
 		Addr:    cfg.Address,
-		Handler: dashboardServer,
+		Handler: ret,
 	}
 
 	return ret
+}
+
+func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	username, password, ok := r.BasicAuth()
+	if !ok || !s.dashboardServer.Verify(username, password) {
+		w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
+		http.Error(w, "unauthorized", http.StatusUnauthorized)
+		return
+	}
+	s.dashboardServer.Handle(w, r)
 }
 
 func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {

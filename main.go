@@ -39,6 +39,8 @@ func main() {
 		return
 	}
 
+	// TODO: use wire
+
 	db, err := model.NewDatabase(cfg.Database)
 	if err != nil {
 		logs.From(ctx).Fatalf("new database: %v", err)
@@ -54,7 +56,11 @@ func main() {
 	}
 	sshServer.Startup(ctx, cancel)
 
-	dashboardServer := dashboard.NewServer(cfg.Dashboard, db)
+	dashboardServer, err := dashboard.NewServer(cfg.Dashboard, db)
+	if err != nil {
+		logs.From(ctx).Fatalf("new dashboard server: %v", err)
+		return
+	}
 
 	httpServer := server.NewHttpServer(cfg.Http, dashboardServer)
 	httpServer.Startup(ctx, cancel)
