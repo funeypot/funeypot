@@ -111,7 +111,7 @@ func (s *SshServer) handleQueue(ctx context.Context) {
 }
 
 func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 
 	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
