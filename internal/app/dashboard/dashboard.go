@@ -75,10 +75,11 @@ func (s *Server) Handle(w http.ResponseWriter, r *http.Request) {
 }
 
 type responsePoint struct {
-	Ip        string  `json:"ip"`
-	Count     int64   `json:"count"`
-	Latitude  float64 `json:"latitude"`
-	Longitude float64 `json:"longitude"`
+	Ip          string    `json:"ip"`
+	Count       int64     `json:"count"`
+	Latitude    float64   `json:"latitude"`
+	Longitude   float64   `json:"longitude"`
+	ActivatedAt time.Time `json:"activated_at"`
 }
 
 type responseGetPoints struct {
@@ -106,10 +107,11 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 			return true
 		}
 		points = append(points, &responsePoint{
-			Ip:        attempt.Ip,
-			Count:     attempt.Count,
-			Latitude:  geo.Latitude,
-			Longitude: geo.Longitude,
+			Ip:          attempt.Ip,
+			Count:       attempt.Count,
+			Latitude:    geo.Latitude,
+			Longitude:   geo.Longitude,
+			ActivatedAt: attempt.StoppedAt,
 		})
 		if attempt.UpdatedAt.After(next) {
 			next = attempt.UpdatedAt
