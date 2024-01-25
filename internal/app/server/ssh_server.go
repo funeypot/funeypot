@@ -136,24 +136,18 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	)
 	ctx = logs.With(ctx, logger)
 
-	attempt, ok, err := s.db.LastBruteAttempt(ctx, ip, model.BruteAttemptKindSsh)
+	attempt, err := s.db.IncrBruteAttempt(
+		ctx,
+		ip,
+		model.BruteAttemptKindSsh,
+		request.Time,
+		request.User, request.Password, request.ClientVersion,
+		request.Time.Add(-24*time.Hour),
+	)
 	if err != nil {
-		logger.Errorf("get last attempt: %v", err)
+		logger.Errorf("incr attempt: %v", err)
 		return
 	}
-	if !ok || time.Since(attempt.StoppedAt) > 24*time.Hour {
-		attempt = &model.BruteAttempt{
-			Ip:        ip,
-			Kind:      model.BruteAttemptKindSsh,
-			StartedAt: request.Time,
-		}
-	}
-
-	attempt.User = request.User
-	attempt.Password = request.Password
-	attempt.ClientVersion = request.ClientVersion
-	attempt.StoppedAt = request.Time
-	attempt.Count++ // TODO: use atomic
 
 	loginLogger := logger.With(
 		"count", attempt.Count,

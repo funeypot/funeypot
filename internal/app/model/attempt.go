@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 func init() {
@@ -61,19 +62,6 @@ func (r *BruteAttempt) BeforeSave(_ *gorm.DB) error {
 	return nil
 }
 
-func (db *Database) LastBruteAttempt(ctx context.Context, ip string, kind BruteAttemptKind) (*BruteAttempt, bool, error) {
-	attempt := &BruteAttempt{}
-	result := db.db.
-		WithContext(ctx).
-		Last(&attempt, "ip = ? AND kind = ?", ip, kind)
-	if err := result.Error; errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, false, nil
-	} else if err != nil {
-		return nil, false, err
-	}
-	return attempt, true, nil
-}
-
 func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time, f func(attempt *BruteAttempt, geo *IpGeo) bool) error {
 	rows, err := db.db.
 		WithContext(ctx).
@@ -101,4 +89,46 @@ func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time
 		}
 	}
 	return nil
+}
+
+func (db *Database) IncrBruteAttempt(
+	ctx context.Context,
+	ip string,
+	kind BruteAttemptKind,
+	timestamp time.Time,
+	user, password, clientVersion string,
+	after time.Time,
+) (*BruteAttempt, error) {
+	attempt := &BruteAttempt{}
+	return attempt, db.db.Transaction(func(tx *gorm.DB) error {
+		tx = tx.Clauses(clause.Locking{Strength: "UPDATE"})
+		result := tx.
+			WithContext(ctx).
+			Where("ip = ? AND kind = ?", ip, kind).
+			Last(attempt)
+		if err := result.Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+			return err
+		}
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) || !attempt.StoppedAt.After(after) {
+			attempt = &BruteAttempt{
+				Ip:            ip,
+				Kind:          kind,
+				User:          user,
+				Password:      password,
+				ClientVersion: clientVersion,
+				StartedAt:     timestamp,
+				StoppedAt:     timestamp,
+				Count:         1,
+			}
+			return tx.Create(attempt).Error
+		}
+
+		attempt.User = user
+		attempt.Password = password
+		attempt.ClientVersion = clientVersion
+		attempt.StoppedAt = timestamp
+		attempt.Count++
+		return tx.Select("user", "password", "client_version", "stopped_at", "count").
+			Updates(attempt).Error
+	})
 }
