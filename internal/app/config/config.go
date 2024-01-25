@@ -33,6 +33,7 @@ func (s Ssh) Validate() error {
 }
 
 type Http struct {
+	// TODO: support disable http server
 	Address string `yaml:"address"`
 }
 

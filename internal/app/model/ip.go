@@ -36,6 +36,12 @@ func (m *IpGeo) FillIpapiResponse(r *ipapi.Response) *IpGeo {
 	return m
 }
 
+func (m *IpGeo) BeforeSave(_ *gorm.DB) error {
+	m.Location = truncateString(m.Location, 255)
+	m.Isp = truncateString(m.Isp, 255)
+	return nil
+}
+
 func (db *Database) TaskIpGeo(ctx context.Context, ip string) (*IpGeo, bool, error) {
 	geo := &IpGeo{}
 	result := db.db.
