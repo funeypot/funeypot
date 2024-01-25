@@ -3,7 +3,9 @@ package server
 import (
 	"context"
 	"errors"
+	"net"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/wolfogre/funeypot/internal/app/config"
@@ -37,6 +39,8 @@ func NewHttpServer(cfg config.Http, handler *Handler, dashboardServer *dashboard
 }
 
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	logger := logs.From(r.Context())
+
 	username, password, ok := r.BasicAuth()
 	if ok && s.dashboardServer.Verify(username, password) {
 		s.dashboardServer.Handle(w, r)
@@ -44,16 +48,33 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if ok {
-		request := &Request{
-			Kind:          model.BruteAttemptKindHttp,
-			Time:          time.Now(),
-			User:          username,
-			Password:      password,
-			SessionId:     uuid.New().String(),
-			ClientVersion: r.UserAgent(),
-			RemoteAddr:    r.RemoteAddr, // TODO: get real remote addr from proxy
+		ip, _, err := net.SplitHostPort(r.RemoteAddr)
+		if err != nil || net.ParseIP(ip) == nil {
+			logger.Warnf("invalid remote addr %q: %v", r.RemoteAddr, err)
+		} else {
+			if forwardedFor := r.Header.Get("X-Forwarded-For"); forwardedFor != "" {
+				netIp := net.ParseIP(ip)
+				if !netIp.IsGlobalUnicast() || netIp.IsPrivate() {
+					splits := strings.Split(forwardedFor, ",")
+					forwardedIp := strings.TrimSpace(splits[len(splits)-1])
+					if net.ParseIP(forwardedIp) == nil {
+						logger.Warnf("invalid X-Forwarded-For %q", forwardedFor)
+					} else {
+						ip = forwardedIp
+					}
+				}
+			}
+
+			s.handler.Handle(r.Context(), &Request{
+				Kind:          model.BruteAttemptKindHttp,
+				Time:          time.Now(),
+				Ip:            ip,
+				User:          username,
+				Password:      password,
+				SessionId:     uuid.New().String(),
+				ClientVersion: r.UserAgent(),
+			})
 		}
-		s.handler.Handle(r.Context(), request)
 	}
 
 	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)

@@ -70,17 +70,23 @@ func (s *SshServer) Shutdown(ctx context.Context) error {
 }
 
 func (s *SshServer) handlePassword(ctx ssh.Context, password string) bool {
-	request := &Request{
-		Kind:          model.BruteAttemptKindSsh,
-		Time:          time.Now(),
-		User:          ctx.User(),
-		Password:      password,
-		SessionId:     ctx.SessionID(),
-		ClientVersion: ctx.ClientVersion(),
-		RemoteAddr:    ctx.RemoteAddr().String(),
-	}
+	logger := logs.From(ctx)
 
-	s.handler.Handle(ctx, request)
+	remoteAddr := ctx.RemoteAddr().String()
+	ip, _, err := net.SplitHostPort(remoteAddr)
+	if err != nil || net.ParseIP(ip) == nil {
+		logger.Warnf("invalid remote addr %q: %v", remoteAddr, err)
+	} else {
+		s.handler.Handle(ctx, &Request{
+			Kind:          model.BruteAttemptKindSsh,
+			Ip:            ip,
+			Time:          time.Now(),
+			User:          ctx.User(),
+			Password:      password,
+			SessionId:     ctx.SessionID(),
+			ClientVersion: ctx.ClientVersion(),
+		})
+	}
 
 	wait := time.After(s.delay)
 

@@ -3,7 +3,6 @@ package server
 import (
 	"context"
 	"fmt"
-	"net"
 	"time"
 
 	"github.com/wolfogre/funeypot/internal/app/model"
@@ -20,11 +19,11 @@ type Server interface {
 type Request struct {
 	Kind          model.BruteAttemptKind
 	Time          time.Time
+	Ip            string
 	User          string
 	Password      string
 	SessionId     string
 	ClientVersion string
-	RemoteAddr    string
 }
 
 func (r Request) ShortSessionId() string {
@@ -71,7 +70,7 @@ func (h *Handler) handleQueue(ctx context.Context) {
 			subCtx, cancel := context.WithTimeout(ctx, 15*time.Second)
 			subCtx = logs.With(subCtx, logger.With(
 				"kind", request.Kind.String(),
-				"remote_addr", request.RemoteAddr,
+				"ip", request.Ip,
 				"session_id", request.ShortSessionId(),
 			))
 			h.handleRequest(subCtx, request)
@@ -86,12 +85,9 @@ func (h *Handler) handleQueue(ctx context.Context) {
 func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	logger := logs.From(ctx)
 
-	ip, _, _ := net.SplitHostPort(request.RemoteAddr)
-	ip = net.ParseIP(ip).String()
-
 	attempt, err := h.db.IncrBruteAttempt(
 		ctx,
-		ip,
+		request.Ip,
 		request.Kind,
 		request.Time,
 		request.User, request.Password, request.ClientVersion,
@@ -105,13 +101,13 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	loginLogger := logger.With(
 		"count", attempt.Count,
 		"duration", attempt.Duration().String(),
-		"remote_addr", request.RemoteAddr,
+		"ip", request.Ip,
 		"user", request.User,
 		"password", request.Password,
 		"client_version", request.ClientVersion,
 	)
 
-	geo, err := h.getIpGeo(ctx, ip)
+	geo, err := h.getIpGeo(ctx, request.Ip)
 	if err != nil {
 		loginLogger.Errorf("get ip geo: %v", err)
 	} else {
