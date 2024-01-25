@@ -92,7 +92,7 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	attempt, err := h.db.IncrBruteAttempt(
 		ctx,
 		ip,
-		model.BruteAttemptKindSsh,
+		request.Kind,
 		request.Time,
 		request.User, request.Password, request.ClientVersion,
 		request.Time.Add(-24*time.Hour),
