@@ -67,10 +67,10 @@ func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time
 	rows, err := db.db.
 		WithContext(ctx).
 		Model(&BruteAttempt{}).
-		Select("brute_attempt.*, ip_geos.*").
-		Joins("LEFT JOIN ip_geos ON brute_attempt.ip = ip_geos.ip").
-		Where("brute_attempt.updated_at > ?", updatedAfter).
-		Order("brute_attempt.updated_at").
+		Select("brute_attempts.*, ip_geos.*").
+		Joins("LEFT JOIN ip_geos ON brute_attempts.ip = ip_geos.ip").
+		Where("brute_attempts.updated_at > ?", updatedAfter).
+		Order("brute_attempts.updated_at").
 		Rows()
 	if err != nil {
 		return err
