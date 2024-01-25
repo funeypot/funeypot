@@ -136,14 +136,15 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	)
 	ctx = logs.With(ctx, logger)
 
-	attempt, ok, err := s.db.LastSshAttempt(ctx, ip)
+	attempt, ok, err := s.db.LastBruteAttempt(ctx, ip, model.BruteAttemptKindSsh)
 	if err != nil {
 		logger.Errorf("get last attempt: %v", err)
 		return
 	}
 	if !ok || time.Since(attempt.StoppedAt) > 24*time.Hour {
-		attempt = &model.SshAttempt{
+		attempt = &model.BruteAttempt{
 			Ip:        ip,
+			Kind:      model.BruteAttemptKindSsh,
 			StartedAt: request.Time,
 		}
 	}
@@ -188,7 +189,7 @@ func (s *SshServer) handleRequest(ctx context.Context, request *SshRequest) {
 	s.reportAttempt(ctx, attempt)
 }
 
-func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.SshAttempt) {
+func (s *SshServer) reportAttempt(ctx context.Context, attempt *model.BruteAttempt) {
 	logger := logs.From(ctx)
 
 	if s.abuseipdbClient == nil {

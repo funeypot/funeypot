@@ -89,7 +89,7 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 	pointM := map[string]struct{}{}
 	var points []*responsePoint
 	next := after
-	if err := s.db.ScanSshAttempt(ctx, after, func(attempt *model.SshAttempt, geo *model.IpGeo) bool {
+	if err := s.db.ScanBruteAttempt(ctx, after, func(attempt *model.BruteAttempt, geo *model.IpGeo) bool {
 		if _, ok := pointM[attempt.Ip]; ok {
 			return true
 		}
