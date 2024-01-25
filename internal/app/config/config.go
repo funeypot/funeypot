@@ -84,10 +84,11 @@ type Abuseipdb struct {
 }
 
 func (a Abuseipdb) Validate() error {
-	if a.Enabled {
-		if a.Key == "" {
-			return fmt.Errorf("abuse ipdb key is required when enabled")
-		}
+	if !a.Enabled {
+		return nil
+	}
+	if a.Key == "" {
+		return fmt.Errorf("abuse ipdb key is required when enabled")
 	}
 	return nil
 }

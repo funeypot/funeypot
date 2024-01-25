@@ -25,6 +25,10 @@ type Server struct {
 }
 
 func NewServer(cfg config.Dashboard, db *model.Database) (*Server, error) {
+	if !cfg.Enabled {
+		return nil, nil
+	}
+
 	s, err := fs.Sub(static, "static")
 	if err != nil {
 		return nil, err
@@ -35,6 +39,10 @@ func NewServer(cfg config.Dashboard, db *model.Database) (*Server, error) {
 		db:       db,
 		static:   http.FileServer(http.FS(s)),
 	}, nil
+}
+
+func (s *Server) Enabled() bool {
+	return s != nil
 }
 
 func (s *Server) Verify(username, password string) bool {

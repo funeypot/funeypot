@@ -47,7 +47,10 @@ func main() {
 		return
 	}
 
-	abuseipdbClient := abuseipdb.NewClient(cfg.Abuseipdb.Key)
+	var abuseipdbClient *abuseipdb.Client
+	if cfg.Abuseipdb.Enabled {
+		abuseipdbClient = abuseipdb.NewClient(cfg.Abuseipdb.Key)
+	}
 
 	handler := server.NewHandler(ctx, db, abuseipdbClient)
 

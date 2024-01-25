@@ -42,7 +42,7 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logger := logs.From(r.Context())
 
 	username, password, ok := r.BasicAuth()
-	if ok && s.dashboardServer.Verify(username, password) {
+	if ok && s.dashboardServer.Enabled() && s.dashboardServer.Verify(username, password) {
 		s.dashboardServer.Handle(w, r)
 		return
 	}
