@@ -78,3 +78,10 @@ func (db *Database) Save(ctx context.Context, value any) error {
 		Save(value).
 		Error
 }
+
+func truncateString(s string, max int) string {
+	if len(s) > max {
+		return s[:max-3] + "..."
+	}
+	return s
+}

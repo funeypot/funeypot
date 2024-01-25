@@ -18,7 +18,7 @@ type SshAttempt struct {
 	Ip            string `gorm:"size:39"` // max ipv6 length
 	User          string `gorm:"size:255"`
 	Password      string `gorm:"size:255"`
-	ClientVersion string `gorm:"size:32"`
+	ClientVersion string `gorm:"size:255"`
 	StartedAt     time.Time
 	StoppedAt     time.Time
 	Count         int64
@@ -43,6 +43,13 @@ func (r *SshAttempt) MaskedPassword() string {
 
 func (r *SshAttempt) ShortClientVersion() string {
 	return strings.TrimPrefix(r.ClientVersion, "SSH-2.0-")
+}
+
+func (r *SshAttempt) BeforeSave(_ *gorm.DB) error {
+	r.User = truncateString(r.User, 255)
+	r.Password = truncateString(r.Password, 255)
+	r.ClientVersion = truncateString(r.ClientVersion, 255)
+	return nil
 }
 
 func (db *Database) LastSshAttempt(ctx context.Context, ip string) (*SshAttempt, bool, error) {
