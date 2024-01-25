@@ -14,12 +14,13 @@ func init() {
 	registerModel(new(BruteAttempt))
 }
 
+//go:generate go run golang.org/x/tools/cmd/stringer -type BruteAttemptKind -linecomment -output attempt_kind.go
 type BruteAttemptKind int
 
 const (
-	_ BruteAttemptKind = iota
-	BruteAttemptKindSsh
-	BruteAttemptKindHttp
+	_                    BruteAttemptKind = iota // none
+	BruteAttemptKindSsh                          // ssh
+	BruteAttemptKindHttp                         // http
 )
 
 type BruteAttempt struct {

@@ -49,7 +49,9 @@ func main() {
 
 	abuseipdbClient := abuseipdb.NewClient(cfg.Abuseipdb.Key)
 
-	sshServer, err := server.NewSshServer(cfg.Ssh, db, abuseipdbClient)
+	handler := server.NewHandler(ctx, db, abuseipdbClient)
+
+	sshServer, err := server.NewSshServer(cfg.Ssh, handler)
 	if err != nil {
 		logs.From(ctx).Fatalf("new ssh server: %v", err)
 		return
@@ -62,7 +64,7 @@ func main() {
 		return
 	}
 
-	httpServer := server.NewHttpServer(cfg.Http, dashboardServer)
+	httpServer := server.NewHttpServer(cfg.Http, handler, dashboardServer)
 	httpServer.Startup(ctx, cancel)
 
 	<-ctx.Done()

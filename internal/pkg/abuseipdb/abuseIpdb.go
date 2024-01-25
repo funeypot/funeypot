@@ -20,7 +20,13 @@ func NewClient(key string) *Client {
 }
 
 func (c *Client) ReportSsh(ctx context.Context, ip string, timestamp time.Time, comment string) (int, error) {
+	// see https://www.abuseipdb.com/categories
 	return c.Report(ctx, ip, []string{"18", "22"}, timestamp, comment)
+}
+
+func (c *Client) ReportHttp(ctx context.Context, ip string, timestamp time.Time, comment string) (int, error) {
+	// see https://www.abuseipdb.com/categories
+	return c.Report(ctx, ip, []string{"18", "21"}, timestamp, comment)
 }
 
 func (c *Client) Report(ctx context.Context, ip string, categories []string, timestamp time.Time, comment string) (int, error) {
