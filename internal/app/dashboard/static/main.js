@@ -8,7 +8,7 @@ class Map {
                 url: "https://d3js.org/world-50m.v1.json",
                 projection: d3.geoNaturalEarth1(),
             },
-            aim: [114.176, 22.2782],
+            aim: [0, 0],
             points: {}
         };
 
@@ -28,7 +28,7 @@ class Map {
             .style("left", 0);
 
         d3.json(this.config.map.url)
-            .then(world => {
+            .then(async world => {
                 this.svg.append("path")
                     .datum(topojson.feature(world, world.objects.land))
                     .attr("fill", "#999")
@@ -41,33 +41,64 @@ class Map {
                     .attr("stroke-linejoin", "round")
                     .attr("d", this.pathGenerator);
 
-                this.svg.append("circle")
-                    .attr("cx", this.config.map.projection(this.config.aim)[0])
-                    .attr("cy", this.config.map.projection(this.config.aim)[1])
-                    .attr("r", 3)
-                    .attr("fill", "blue");
+                try {
+                    const response = await fetch('/api/v1/self');
+                    if (!response.ok) {
+                        return;
+                    }
+                    const data = await response.json();
+                    this.config.aim = [data.longitude, data.latitude];
+                    this.svg.append("circle")
+                        .attr("cx", this.config.map.projection(this.config.aim)[0])
+                        .attr("cy", this.config.map.projection(this.config.aim)[1])
+                        .attr("r", 5)
+                        .attr("fill", "blue");
+
+                    this.fetchPoints();
+                } catch (error) {
+                    console.error(`Fetch error: ${error}`);
+                }
             })
             .catch(error => console.error(error));
     }
 
-    addPoint(name, location, total) {
+    addPoint(name, location, count, activatedAt) {
         let point = this.config.points[name];
         if (point) {
-            point.setTotal(total);
+            point.update(count, activatedAt);
             return;
         }
-        point = new Point(name, location, total, this.config.aim, this.svg, this.config.map.projection);
+        point = new Point(name, location, count, activatedAt, this.config.aim, this.svg, this.config.map.projection);
         point.start();
         this.config.points[name] = point;
+    }
+
+    async fetchPoints() {
+        let points = null;
+        try {
+            const response = await fetch('/api/v1/points');
+            if (!response.ok) {
+                return;
+            }
+            const data = await response.json();
+            points = data.points;
+        } catch (error) {
+            console.error(`Fetch error: ${error}`);
+            return;
+        }
+        for (const point of points) {
+            map.addPoint(point.ip, [point.longitude, point.latitude], point.count, point.activated_at);
+        }
+        setTimeout(this.fetchPoints, 5000)
     }
 }
 
 class Point {
-    constructor(name, location, count, aim, svg, projection) {
+    constructor(name, location, count, activatedAt, aim, svg, projection) {
         this.name = name;
         this.location = location
-        this.count = count-10;
-        this.total = count;
+        this.count = count;
+        this.activatedAt = activatedAt;
         this.aim = aim;
         this.svg = svg;
         this.projection = projection;
@@ -78,8 +109,8 @@ class Point {
         this.svg.append("circle")
             .attr("cx", this.projection(this.location)[0])
             .attr("cy", this.projection(this.location)[1])
-            .attr("r", 3)
-            .attr("fill", "red");
+            .attr("r", Math.log(this.count) / Math.log(5))
+            .attr("fill", "rgba(255, 0, 0, 0.5)");
 
         const line = d3.line().curve(d3.curveBasis);
         const intermediatePoint = [
@@ -94,7 +125,7 @@ class Point {
                 this.projection(this.aim)
             ])
             .attr("fill", "none")
-            .attr("stroke", "green")
+            .attr("stroke", "rgba(200, 100, 100, 0.5)")
             .attr("stroke-width", 2)
             .attr("d", line);
 
@@ -110,8 +141,9 @@ class Point {
         this.check();
     }
 
-    setTotal(total) {
-        this.total = total;
+    update(count, activatedAt) {
+        this.count = count;
+        this.activatedAt = activatedAt;
         if (!this.checking) {
             this.check();
         }
@@ -120,10 +152,12 @@ class Point {
     check() {
         this.checking = true;
 
-        if (this.count === this.total) {
+        let date = new Date(this.activatedAt)
+        let now = new Date()
+        if (now - date > 5* 60 * 1000) {
+            this.checking = false
             return
         }
-        this.count++;
 
         const totalLength = this.line.node().getTotalLength();
 
@@ -139,11 +173,6 @@ class Point {
             .ease(d3.easeCubicInOut)
             .attr("stroke-dashoffset", -totalLength);
 
-        if (this.count === this.total) {
-            this.checking = false
-            return
-        }
-
         setTimeout(() => {
             this.check()
         }, 3000)
@@ -151,22 +180,5 @@ class Point {
 }
 
 const map = new Map();
-window.map = map;
 map.start();
 
-setInterval(async () => {
-    let points = null;
-    try {
-        const response = await fetch('/api/v1/points');
-        if (!response.ok) {
-            return;
-        }
-        const data = await response.json();
-        points = data.points;
-    } catch (error) {
-        console.error(`Fetch error: ${error}`);
-    }
-    for (const point of points) {
-        map.addPoint(point.ip, [point.longitude, point.latitude], point.count);
-    }
-}, 5000)
