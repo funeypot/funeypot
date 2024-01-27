@@ -94,6 +94,9 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 	afterQ := r.URL.Query().Get("after")
 	afterI, _ := strconv.ParseInt(afterQ, 10, 64)
 	after := time.Unix(afterI, 0)
+	if afterI == 0 {
+		after = time.Now().AddDate(0, 0, -30)
+	}
 
 	pointM := map[string]struct{}{}
 	var points []*responsePoint

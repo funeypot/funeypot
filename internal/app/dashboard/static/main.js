@@ -9,7 +9,7 @@ class Map {
                 projection: d3.geoNaturalEarth1(),
             },
             aim: [0, 0],
-            points: {}
+            points: {},
         };
 
         this.width = window.innerWidth;
@@ -54,7 +54,7 @@ class Map {
                         .attr("r", 5)
                         .attr("fill", "blue");
 
-                    this.fetchPoints();
+                    await this.fetchPoints();
                 } catch (error) {
                     console.error(`Fetch error: ${error}`);
                 }
@@ -74,22 +74,28 @@ class Map {
     }
 
     async fetchPoints() {
-        let points = null;
+        let data = null;
+        if (!this.after) {
+            this.after = 0;
+        }
         try {
-            const response = await fetch('/api/v1/points');
+            const response = await fetch('/api/v1/points?after='+this.after);
             if (!response.ok) {
                 return;
             }
-            const data = await response.json();
-            points = data.points;
+            data = await response.json();
         } catch (error) {
             console.error(`Fetch error: ${error}`);
-            return;
         }
-        for (const point of points) {
-            map.addPoint(point.ip, [point.longitude, point.latitude], point.count, point.activated_at);
+        if (data) {
+            if (data.points) {
+                for (const point of data.points) {
+                    map.addPoint(point.ip, [point.longitude, point.latitude], point.count, point.activated_at);
+                }
+            }
+            this.after = data.next;
         }
-        setTimeout(this.fetchPoints, 5000)
+        setTimeout(this.fetchPoints.bind(this), 5000)
     }
 }
 
