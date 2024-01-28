@@ -59,11 +59,13 @@ func (s *FtpServer) GetSettings() (*ftpserver.Settings, error) {
 	}, nil
 }
 
-func (s *FtpServer) ClientConnected(_ ftpserver.ClientContext) (string, error) {
+func (s *FtpServer) ClientConnected(cc ftpserver.ClientContext) (string, error) {
+	logs.Default().Debugf("ftp client connected: %s", cc.RemoteAddr().String())
 	return "", nil
 }
 
-func (s *FtpServer) ClientDisconnected(_ ftpserver.ClientContext) {
+func (s *FtpServer) ClientDisconnected(cc ftpserver.ClientContext) {
+	logs.Default().Debugf("ftp client disconnected: %s", cc.RemoteAddr().String())
 	return
 }
 
