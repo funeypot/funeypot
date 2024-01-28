@@ -21,6 +21,7 @@ const (
 	_                    BruteAttemptKind = iota // none
 	BruteAttemptKindSsh                          // ssh
 	BruteAttemptKindHttp                         // http
+	BruteAttemptKindFtp                          // ftp
 )
 
 type BruteAttempt struct {

@@ -70,8 +70,12 @@ func main() {
 	httpServer := server.NewHttpServer(cfg.Http, handler, dashboardServer)
 	httpServer.Startup(ctx, cancel)
 
+	ftpServer := server.NewFtpServer(cfg.Ftp, handler)
+	ftpServer.Startup(ctx, cancel)
+
 	<-ctx.Done()
 	logger.Infof("shutdown")
 	_ = sshServer.Shutdown(ctx)
 	_ = httpServer.Shutdown(ctx)
+	_ = ftpServer.Shutdown(ctx)
 }

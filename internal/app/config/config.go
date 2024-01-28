@@ -11,6 +11,7 @@ import (
 type Config struct {
 	Ssh       Ssh       `yaml:"ssh"`
 	Http      Http      `yaml:"http"`
+	Ftp       Ftp       `yaml:"ftp"`
 	Database  Database  `yaml:"database"`
 	Dashboard Dashboard `yaml:"dashboard"`
 	Abuseipdb Abuseipdb `yaml:"abuseipdb"`
@@ -35,6 +36,18 @@ func (s Ssh) Validate() error {
 type Http struct {
 	// TODO: support disable http server
 	Address string `yaml:"address"`
+}
+
+type Ftp struct {
+	// TODO: support disable ftp server
+	Address string `yaml:"address"`
+}
+
+func (f Ftp) Validate() error {
+	if f.Address == "" {
+		return fmt.Errorf("ftp address is required")
+	}
+	return nil
 }
 
 func (h Http) Validate() error {

@@ -10,11 +10,12 @@ func _() {
 	var x [1]struct{}
 	_ = x[BruteAttemptKindSsh-1]
 	_ = x[BruteAttemptKindHttp-2]
+	_ = x[BruteAttemptKindFtp-3]
 }
 
-const _BruteAttemptKind_name = "sshhttp"
+const _BruteAttemptKind_name = "sshhttpftp"
 
-var _BruteAttemptKind_index = [...]uint8{0, 3, 7}
+var _BruteAttemptKind_index = [...]uint8{0, 3, 7, 10}
 
 func (i BruteAttemptKind) String() string {
 	i -= 1
