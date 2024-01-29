@@ -29,6 +29,11 @@ func (c *Client) ReportHttp(ctx context.Context, ip string, timestamp time.Time,
 	return c.Report(ctx, ip, []string{"18", "21"}, timestamp, comment)
 }
 
+func (c *Client) ReportFtp(ctx context.Context, ip string, timestamp time.Time, comment string) (int, error) {
+	// see https://www.abuseipdb.com/categories
+	return c.Report(ctx, ip, []string{"18", "5"}, timestamp, comment)
+}
+
 func (c *Client) Report(ctx context.Context, ip string, categories []string, timestamp time.Time, comment string) (int, error) {
 	result := &response{}
 
