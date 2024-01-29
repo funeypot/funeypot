@@ -87,11 +87,13 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
-	if s == nil {
+	logger := logs.From(ctx)
+
+	if !s.Enabled() {
+		logger.Infof("skip starting ftp server since it is not enabled")
 		return
 	}
 	go func() {
-		logger := logs.From(ctx)
 		logger.Infof("start http server, listen on %s", s.server.Addr)
 		if err := s.server.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 			logger.Errorf("listen and serve: %v", err)
@@ -101,7 +103,7 @@ func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func (s *HttpServer) Shutdown(ctx context.Context) error {
-	if s == nil {
+	if !s.Enabled() {
 		return nil
 	}
 	logs.From(ctx).Infof("shutdown http server")

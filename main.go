@@ -7,11 +7,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/dashboard"
-	"github.com/wolfogre/funeypot/internal/app/model"
-	"github.com/wolfogre/funeypot/internal/app/server"
-	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
+	"github.com/wolfogre/funeypot/internal/app/inject"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 )
 
@@ -33,49 +29,19 @@ func main() {
 	defer cancel()
 	ctx = logs.With(ctx, logger)
 
-	cfg, err := config.Load(configFile)
+	entrypoint, err := inject.NewEntrypoint(ctx, configFile)
 	if err != nil {
-		logs.From(ctx).Fatalf("load config: %v", err)
+		logs.From(ctx).Fatalf("new entrypoint: %v", err)
 		return
 	}
 
-	// TODO: use wire
-
-	db, err := model.NewDatabase(cfg.Database)
-	if err != nil {
-		logs.From(ctx).Fatalf("new database: %v", err)
-		return
-	}
-
-	var abuseipdbClient *abuseipdb.Client
-	if cfg.Abuseipdb.Enabled {
-		abuseipdbClient = abuseipdb.NewClient(cfg.Abuseipdb.Key)
-	}
-
-	handler := server.NewHandler(ctx, db, abuseipdbClient)
-
-	sshServer, err := server.NewSshServer(cfg.Ssh, handler)
-	if err != nil {
-		logs.From(ctx).Fatalf("new ssh server: %v", err)
-		return
-	}
-	sshServer.Startup(ctx, cancel)
-
-	dashboardServer, err := dashboard.NewServer(cfg.Dashboard, db)
-	if err != nil {
-		logs.From(ctx).Fatalf("new dashboard server: %v", err)
-		return
-	}
-
-	httpServer := server.NewHttpServer(cfg.Http, handler, dashboardServer)
-	httpServer.Startup(ctx, cancel)
-
-	ftpServer := server.NewFtpServer(cfg.Ftp, handler)
-	ftpServer.Startup(ctx, cancel)
+	entrypoint.SshServer.Startup(ctx, cancel)
+	entrypoint.HttpServer.Startup(ctx, cancel)
+	entrypoint.FtpServer.Startup(ctx, cancel)
 
 	<-ctx.Done()
 	logger.Infof("shutdown")
-	_ = sshServer.Shutdown(ctx)
-	_ = httpServer.Shutdown(ctx)
-	_ = ftpServer.Shutdown(ctx)
+	_ = entrypoint.SshServer.Shutdown(ctx)
+	_ = entrypoint.HttpServer.Shutdown(ctx)
+	_ = entrypoint.FtpServer.Shutdown(ctx)
 }

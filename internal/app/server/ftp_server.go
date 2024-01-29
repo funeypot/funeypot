@@ -25,6 +25,10 @@ type FtpServer struct {
 var _ Server = (*FtpServer)(nil)
 
 func NewFtpServer(cfg config.Ftp, handler *Handler) *FtpServer {
+	if !cfg.Enabled {
+		return nil
+	}
+
 	ret := &FtpServer{
 		addr:    cfg.Address,
 		handler: handler,
@@ -35,9 +39,18 @@ func NewFtpServer(cfg config.Ftp, handler *Handler) *FtpServer {
 	return ret
 }
 
+func (s *FtpServer) Enabled() bool {
+	return s != nil
+}
+
 func (s *FtpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
+	logger := logs.From(ctx)
+
+	if !s.Enabled() {
+		logger.Infof("skip starting ftp server since it is not enabled")
+		return
+	}
 	go func() {
-		logger := logs.From(ctx)
 		logger.Infof("start ftp server, listen on %s", s.addr)
 		if err := s.server.ListenAndServe(); err != nil {
 			logger.Errorf("listen and serve: %v", err)
@@ -47,6 +60,10 @@ func (s *FtpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func (s *FtpServer) Shutdown(ctx context.Context) error {
+	if !s.Enabled() {
+		return nil
+	}
+
 	logs.From(ctx).Infof("shutdown ftp server")
 	return s.server.Stop()
 }

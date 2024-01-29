@@ -49,7 +49,7 @@ func (h Http) Validate() error {
 }
 
 type Ftp struct {
-	// TODO: support disable ftp server
+	Enabled bool   `yaml:"enabled"`
 	Address string `yaml:"address"`
 }
 
@@ -154,5 +154,3 @@ func (c *Config) Validate() error {
 
 	return nil
 }
-
-// TODO: generate default config
