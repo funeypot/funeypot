@@ -38,6 +38,10 @@ func NewHttpServer(cfg config.Http, handler *Handler, dashboardServer *dashboard
 	return ret
 }
 
+func (s *HttpServer) Enabled() bool {
+	return s != nil
+}
+
 func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	logger := logs.From(r.Context())
 
@@ -83,6 +87,9 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
+	if s == nil {
+		return
+	}
 	go func() {
 		logger := logs.From(ctx)
 		logger.Infof("start http server, listen on %s", s.server.Addr)
@@ -94,6 +101,9 @@ func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
 }
 
 func (s *HttpServer) Shutdown(ctx context.Context) error {
+	if s == nil {
+		return nil
+	}
 	logs.From(ctx).Infof("shutdown http server")
 	return s.server.Shutdown(ctx)
 }

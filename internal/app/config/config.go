@@ -34,8 +34,18 @@ func (s Ssh) Validate() error {
 }
 
 type Http struct {
-	// TODO: support disable http server
+	Enabled bool   `yaml:"enabled"`
 	Address string `yaml:"address"`
+}
+
+func (h Http) Validate() error {
+	if !h.Enabled {
+		return nil
+	}
+	if h.Address == "" {
+		return fmt.Errorf("http address is required")
+	}
+	return nil
 }
 
 type Ftp struct {
@@ -46,13 +56,6 @@ type Ftp struct {
 func (f Ftp) Validate() error {
 	if f.Address == "" {
 		return fmt.Errorf("ftp address is required")
-	}
-	return nil
-}
-
-func (h Http) Validate() error {
-	if h.Address == "" {
-		return fmt.Errorf("http address is required")
 	}
 	return nil
 }
@@ -95,6 +98,7 @@ func (d Dashboard) Validate() error {
 type Abuseipdb struct {
 	Enabled bool   `yaml:"enabled"`
 	Key     string `json:"key"`
+	// TODO: support custom interval
 }
 
 func (a Abuseipdb) Validate() error {
@@ -143,6 +147,11 @@ func (c *Config) Validate() error {
 	if err := c.Abuseipdb.Validate(); err != nil {
 		return fmt.Errorf("abuse ipdb: %w", err)
 	}
+
+	if !c.Http.Enabled && c.Dashboard.Enabled {
+		return fmt.Errorf("http.enabled must be true when dashboard.enabled is true")
+	}
+
 	return nil
 }
 
