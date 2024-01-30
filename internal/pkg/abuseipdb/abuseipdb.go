@@ -47,7 +47,7 @@ func (c *Client) ReportFtp(ctx context.Context, ip string, timestamp time.Time, 
 func (c *Client) Report(ctx context.Context, ip string, categories []string, timestamp time.Time, comment string) (int, error) {
 	result := &response{}
 
-	_, err := resty.New().R().
+	resp, err := resty.New().R().
 		SetContext(ctx).
 		SetHeader("Key", c.key).
 		SetFormData(map[string]string{
@@ -60,6 +60,10 @@ func (c *Client) Report(ctx context.Context, ip string, categories []string, tim
 		Post("https://api.abuseipdb.com/api/v2/report")
 	if err != nil {
 		return 0, fmt.Errorf("do request: %w", err)
+	}
+
+	if resp.IsError() {
+		return 0, fmt.Errorf("response: %v", resp.Status())
 	}
 
 	if len(result.Errors) > 0 {

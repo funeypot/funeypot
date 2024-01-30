@@ -17,12 +17,16 @@ TODO: check
 func Query(ctx context.Context, ip string) (*Response, error) {
 	result := &Response{}
 
-	_, err := resty.New().R().
+	resp, err := resty.New().R().
 		SetContext(ctx).
 		SetResult(result).
 		Get(fmt.Sprintf("http://ip-api.com/json/%s?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query", ip))
 	if err != nil {
 		return nil, fmt.Errorf("do request: %w", err)
+	}
+
+	if resp.IsError() {
+		return nil, fmt.Errorf("%d %s", resp.StatusCode(), resp.Status())
 	}
 
 	if result.Status != "success" {

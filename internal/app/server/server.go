@@ -163,7 +163,7 @@ func (h *Handler) reportAttempt(ctx context.Context, attempt *model.BruteAttempt
 		logger.Errorf("get last report: %v", err)
 		return
 	}
-	if ok && time.Since(report.ReportedAt) < 20*time.Minute {
+	if ok && time.Since(report.ReportedAt) < h.abuseipdbClient.Interval() {
 		return
 	}
 
