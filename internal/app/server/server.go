@@ -152,7 +152,7 @@ func (h *Handler) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, error)
 func (h *Handler) reportAttempt(ctx context.Context, attempt *model.BruteAttempt) {
 	logger := logs.From(ctx)
 
-	if h.abuseipdbClient == nil {
+	if !h.abuseipdbClient.Enabled() {
 		return
 	}
 	if attempt.Count < 5 {

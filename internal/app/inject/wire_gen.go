@@ -12,7 +12,6 @@ import (
 	"github.com/wolfogre/funeypot/internal/app/dashboard"
 	"github.com/wolfogre/funeypot/internal/app/model"
 	"github.com/wolfogre/funeypot/internal/app/server"
-	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
 )
 
 // Injectors from wire.go:
@@ -28,7 +27,8 @@ func NewEntrypoint(ctx context.Context, configFile string) (*Entrypoint, error) 
 	if err != nil {
 		return nil, err
 	}
-	client := abuseipdb.NewClient(configFile)
+	abuseipdb := configConfig.Abuseipdb
+	client := newAbuseipdbClient(abuseipdb)
 	handler := server.NewHandler(ctx, modelDatabase, client)
 	sshServer, err := server.NewSshServer(ssh, handler)
 	if err != nil {

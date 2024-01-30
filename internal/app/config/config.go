@@ -25,10 +25,10 @@ type Ssh struct {
 
 func (s Ssh) Validate() error {
 	if s.Address == "" {
-		return fmt.Errorf("ssh address is required")
+		return fmt.Errorf("address is required")
 	}
 	if s.Delay < 0 {
-		return fmt.Errorf("ssh delay cannot be negative")
+		return fmt.Errorf("delay cannot be negative")
 	}
 	return nil
 }
@@ -43,7 +43,7 @@ func (h Http) Validate() error {
 		return nil
 	}
 	if h.Address == "" {
-		return fmt.Errorf("http address is required")
+		return fmt.Errorf("address is required")
 	}
 	return nil
 }
@@ -54,8 +54,11 @@ type Ftp struct {
 }
 
 func (f Ftp) Validate() error {
+	if !f.Enabled {
+		return nil
+	}
 	if f.Address == "" {
-		return fmt.Errorf("ftp address is required")
+		return fmt.Errorf("address is required")
 	}
 	return nil
 }
@@ -67,11 +70,11 @@ type Database struct {
 
 func (d Database) Validate() error {
 	if d.Driver == "" {
-		return fmt.Errorf("database driver is required")
+		return fmt.Errorf("driver is required")
 	}
 
 	if d.Dsn == "" {
-		return fmt.Errorf("database dsn is required")
+		return fmt.Errorf("dsn is required")
 	}
 	return nil
 }
@@ -87,18 +90,18 @@ func (d Dashboard) Validate() error {
 		return nil
 	}
 	if d.Username == "" {
-		return fmt.Errorf("dashboard username is required")
+		return fmt.Errorf("username is required")
 	}
 	if len(d.Password) < 8 {
-		return fmt.Errorf("dashboard password is required and must be at least 8 characters")
+		return fmt.Errorf("password is required and must be at least 8 characters")
 	}
 	return nil
 }
 
 type Abuseipdb struct {
-	Enabled bool   `yaml:"enabled"`
-	Key     string `json:"key"`
-	// TODO: support custom interval
+	Enabled  bool          `yaml:"enabled"`
+	Key      string        `yaml:"key"`
+	Interval time.Duration `yaml:"interval"`
 }
 
 func (a Abuseipdb) Validate() error {
@@ -106,7 +109,10 @@ func (a Abuseipdb) Validate() error {
 		return nil
 	}
 	if a.Key == "" {
-		return fmt.Errorf("abuse ipdb key is required when enabled")
+		return fmt.Errorf("key is required when enabled")
+	}
+	if a.Interval < 15*time.Minute {
+		return fmt.Errorf("interval must be at least 15 minutes")
 	}
 	return nil
 }

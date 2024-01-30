@@ -10,13 +10,23 @@ import (
 )
 
 type Client struct {
-	key string
+	key      string
+	interval time.Duration
 }
 
-func NewClient(key string) *Client {
+func NewClient(key string, interval time.Duration) *Client {
 	return &Client{
-		key: key,
+		key:      key,
+		interval: interval,
 	}
+}
+
+func (c *Client) Enabled() bool {
+	return c != nil
+}
+
+func (c *Client) Interval() time.Duration {
+	return c.interval
 }
 
 func (c *Client) ReportSsh(ctx context.Context, ip string, timestamp time.Time, comment string) (int, error) {
