@@ -8,8 +8,6 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-// TODO: add log level
-
 type Logger = *zap.SugaredLogger
 
 var def Logger
@@ -24,6 +22,16 @@ func init() {
 }
 
 func Default() Logger {
+	return def
+}
+
+func SetLevel(level string) Logger {
+	l, err := zapcore.ParseLevel(level)
+	if err != nil {
+		def.Errorf("ignore invalid log level %s: %v", level, err)
+		return def
+	}
+	def = def.WithOptions(zap.IncreaseLevel(l))
 	return def
 }
 

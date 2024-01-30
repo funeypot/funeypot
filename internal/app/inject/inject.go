@@ -10,6 +10,7 @@ import (
 )
 
 type Entrypoint struct {
+	Config     *config.Config
 	SshServer  *server.SshServer
 	HttpServer *server.HttpServer
 	FtpServer  *server.FtpServer
@@ -17,7 +18,6 @@ type Entrypoint struct {
 
 var providerSet = wire.NewSet(
 	newEntrypoint,
-	config.Load,
 	wire.FieldsOf(new(*config.Config),
 		"Database",
 		"Abuseipdb",

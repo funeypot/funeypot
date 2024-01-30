@@ -8,12 +8,6 @@ import (
 	"github.com/go-resty/resty/v2"
 )
 
-/*
-TODO: check
-      < X-Ttl: 3
-      < X-Rl: 34
-*/
-
 func Query(ctx context.Context, ip string) (*Response, error) {
 	result := &Response{}
 

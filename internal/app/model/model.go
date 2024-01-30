@@ -16,7 +16,7 @@ type Database struct {
 	db *gorm.DB
 }
 
-func NewDatabase(cfg config.Database) (*Database, error) {
+func NewDatabase(ctx context.Context, cfg config.Database) (*Database, error) {
 	var (
 		db  *gorm.DB
 		err error
@@ -39,7 +39,7 @@ func NewDatabase(cfg config.Database) (*Database, error) {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
 
-	if err := db.AutoMigrate(models...); err != nil {
+	if err := db.WithContext(ctx).AutoMigrate(models...); err != nil {
 		return nil, fmt.Errorf("auto migrate: %w", err)
 	}
 

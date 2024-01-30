@@ -16,32 +16,28 @@ import (
 
 // Injectors from wire.go:
 
-func NewEntrypoint(ctx context.Context, configFile string) (*Entrypoint, error) {
-	configConfig, err := config.Load(configFile)
+func NewEntrypoint(ctx context.Context, cfg *config.Config) (*Entrypoint, error) {
+	ssh := cfg.Ssh
+	database := cfg.Database
+	modelDatabase, err := model.NewDatabase(ctx, database)
 	if err != nil {
 		return nil, err
 	}
-	ssh := configConfig.Ssh
-	database := configConfig.Database
-	modelDatabase, err := model.NewDatabase(database)
-	if err != nil {
-		return nil, err
-	}
-	abuseipdb := configConfig.Abuseipdb
+	abuseipdb := cfg.Abuseipdb
 	client := newAbuseipdbClient(abuseipdb)
 	handler := server.NewHandler(ctx, modelDatabase, client)
 	sshServer, err := server.NewSshServer(ssh, handler)
 	if err != nil {
 		return nil, err
 	}
-	http := configConfig.Http
-	configDashboard := configConfig.Dashboard
+	http := cfg.Http
+	configDashboard := cfg.Dashboard
 	dashboardServer, err := dashboard.NewServer(configDashboard, modelDatabase)
 	if err != nil {
 		return nil, err
 	}
 	httpServer := server.NewHttpServer(http, handler, dashboardServer)
-	ftp := configConfig.Ftp
+	ftp := cfg.Ftp
 	ftpServer := server.NewFtpServer(ftp, handler)
 	entrypoint := newEntrypoint(sshServer, httpServer, ftpServer)
 	return entrypoint, nil

@@ -7,11 +7,13 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/inject"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 )
 
 var (
+	Version    = "dev"
 	configFile = "config.yaml"
 )
 
@@ -24,14 +26,22 @@ func main() {
 	defer logs.Default().Sync()
 
 	logger := logs.Default()
+	logger.Infof("funeypot %s starting", Version)
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
+
+	cfg, err := config.Load(configFile)
+	if err != nil {
+		logger.Fatalf("load config: %v", err)
+		return
+	}
+	logger = logs.SetLevel(cfg.Log.Level)
 	ctx = logs.With(ctx, logger)
 
-	entrypoint, err := inject.NewEntrypoint(ctx, configFile)
+	entrypoint, err := inject.NewEntrypoint(ctx, cfg)
 	if err != nil {
-		logs.From(ctx).Fatalf("new entrypoint: %v", err)
+		logger.Fatalf("new entrypoint: %v", err)
 		return
 	}
 

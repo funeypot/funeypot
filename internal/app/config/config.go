@@ -5,16 +5,32 @@ import (
 	"os"
 	"time"
 
+	"go.uber.org/zap/zapcore"
 	"gopkg.in/yaml.v3"
 )
 
 type Config struct {
+	Log       Log       `yaml:"log"`
 	Ssh       Ssh       `yaml:"ssh"`
 	Http      Http      `yaml:"http"`
 	Ftp       Ftp       `yaml:"ftp"`
 	Database  Database  `yaml:"database"`
 	Dashboard Dashboard `yaml:"dashboard"`
 	Abuseipdb Abuseipdb `yaml:"abuseipdb"`
+}
+
+type Log struct {
+	Level string `yaml:"level"`
+}
+
+func (l Log) Validate() error {
+	if l.Level == "" {
+		return fmt.Errorf("level is required")
+	}
+	if _, err := zapcore.ParseLevel(l.Level); err != nil {
+		return fmt.Errorf("invalid level %q: %w", l.Level, err)
+	}
+	return nil
 }
 
 type Ssh struct {
@@ -138,6 +154,9 @@ func Load(file string) (*Config, error) {
 }
 
 func (c *Config) Validate() error {
+	if err := c.Log.Validate(); err != nil {
+		return fmt.Errorf("log: %w", err)
+	}
 	if err := c.Ssh.Validate(); err != nil {
 		return fmt.Errorf("ssh: %w", err)
 	}
