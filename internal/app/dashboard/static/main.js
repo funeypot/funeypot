@@ -1,6 +1,8 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import * as topojson from "https://cdn.skypack.dev/topojson-client";
 
+// TODO: add logo
+
 class Map {
     constructor() {
         this.config = {

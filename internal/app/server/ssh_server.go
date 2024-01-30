@@ -9,6 +9,7 @@ import (
 
 	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/model"
+	"github.com/wolfogre/funeypot/internal/pkg/fakever"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 	"github.com/wolfogre/funeypot/internal/pkg/sshkey"
 
@@ -29,13 +30,15 @@ func NewSshServer(cfg config.Ssh, handler *Handler) (*SshServer, error) {
 		delay:   cfg.Delay,
 		handler: handler,
 	}
+
 	signer, err := sshkey.GenerateSigner(cfg.KeySeed)
 	if err != nil {
 		return nil, fmt.Errorf("generate signer: %w", err)
 	}
+
 	ret.server = &ssh.Server{
 		HostSigners: []ssh.Signer{signer},
-		Version:     "OpenSSH_8.0", // TODO: random version
+		Version:     fakever.SshVersion,
 		Addr:        cfg.Address,
 		Handler: func(session ssh.Session) {
 			_ = session.Exit(0)
