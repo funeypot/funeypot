@@ -1,8 +1,6 @@
 import * as d3 from "https://cdn.jsdelivr.net/npm/d3@7/+esm";
 import * as topojson from "https://cdn.skypack.dev/topojson-client";
 
-// TODO: add logo
-
 class Map {
     constructor() {
         this.config = {
@@ -28,6 +26,25 @@ class Map {
             .style("position", "absolute")
             .style("top", 0)
             .style("left", 0);
+
+        fetch("logo.svg")
+            .then(response => response.text())
+            .then(data => {
+                const parser = new DOMParser();
+                const logoSvg = parser.parseFromString(data, "image/svg+xml").documentElement;
+
+                const node = document.importNode(logoSvg, true);
+
+                let logoLonLat = [-150, 0];
+
+                this.svg.append(() => node)
+                    .attr("width", this.width / 5)
+                    .attr("height", this.width / 5)
+                    .attr("x", this.config.map.projection(logoLonLat)[0])
+                    .attr("y", this.config.map.projection(logoLonLat)[1])
+                    .style("opacity", 0.3);
+            });
+
 
         d3.json(this.config.map.url)
             .then(async world => {
