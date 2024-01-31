@@ -26,6 +26,10 @@ type HttpServer struct {
 var _ Server = (*HttpServer)(nil)
 
 func NewHttpServer(cfg config.Http, handler *Handler, dashboardServer *dashboard.Server) *HttpServer {
+	if !cfg.Enabled {
+		return nil
+	}
+
 	ret := &HttpServer{
 		dashboardServer: dashboardServer,
 		handler:         handler,
