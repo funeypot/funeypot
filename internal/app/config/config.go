@@ -133,7 +133,16 @@ func (a Abuseipdb) Validate() error {
 	return nil
 }
 
-func Load(file string) (*Config, error) {
+func Load(file string, generate bool) (*Config, error) {
+	if _, err := os.Stat(file); os.IsNotExist(err) {
+		if !generate {
+			return nil, fmt.Errorf("config file %q does not exist", file)
+		}
+		if err := Generate(file); err != nil {
+			return nil, fmt.Errorf("generate config: %w", err)
+		}
+	}
+
 	f, err := os.Open(file)
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", file, err)

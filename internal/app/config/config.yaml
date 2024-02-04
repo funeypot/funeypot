@@ -1,0 +1,59 @@
+# Configuration for logging
+log:
+  # Available levels: "debug", "info", "warn", "error", "fatal", "panic"
+  level: "info"
+
+# Configuration for SSH honeypot
+ssh:
+  # The address to listen on.
+  # It's recommended to keep it as ":22" and modify the port of real SSH server to another port.
+  # Or you can set it to another port to avoid conflict.
+  address: ":22"
+  # The delay before returning a response.
+  # It's recommended to keep it as 2s, like a real SSH server
+  delay: "2s"
+  # The seed to generate the SSH keys, it can be any random string.
+  # If it's empty, the SSH keys will be generated every time the server starts.
+  # It's recommended to set a random string and keep it unchanged to maintain consistent keys, like a real SSH server.
+  key_seed: ""
+
+# Configuration for HTTP honeypot
+http:
+  # Whether to enable.
+  enabled: false
+  # The address to listen on.
+  address: ":80"
+
+# Configuration for FTP honeypot
+ftp:
+  # Whether to enable.
+  enabled: false
+  # The address to listen on.
+  address: ":21"
+
+# Configuration for database
+database:
+  # The driver of the database, available values: "sqlite", "postgres"
+  driver: "sqlite"
+  # The data source name of the database.
+  dsn: "funeypot.db"
+
+# Configuration for dashboard
+dashboard:
+  # Whether to enable.
+  # It requires http honeypot to be enabled.
+  enabled: false
+  # The username to login.
+  username: ""
+  # The password to login.
+  password: ""
+
+# Configuration for reporting to abuse IPDB
+abuseipdb:
+  # Whether to enable.
+  enabled: false
+  # The key to call the API.
+  key: ""
+  # The interval to report a same IP.
+  # It should be longer than 15m, or the report will be refused.
+  interval: "15m"

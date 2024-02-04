@@ -23,11 +23,11 @@ func NewDatabase(ctx context.Context, cfg config.Database) (*Database, error) {
 	)
 
 	switch cfg.Driver {
-	case "sqlite":
+	case "sqlite", "sqlite3":
 		db, err = gorm.Open(sqlite.Open(cfg.Dsn), &gorm.Config{
 			Logger: logs.GormLogger{},
 		})
-	case "postgresql", "postgres":
+	case "postgres", "postgresql":
 		db, err = gorm.Open(postgres.Open(cfg.Dsn), &gorm.Config{
 			Logger: logs.GormLogger{},
 		})

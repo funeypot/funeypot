@@ -13,12 +13,14 @@ import (
 )
 
 var (
-	Version    = "dev"
-	configFile = "config.yaml"
+	Version               = "dev"
+	configFile            = "config.yaml"
+	configDisableGenerate = false
 )
 
 func init() {
 	flag.StringVar(&configFile, "c", configFile, "config file")
+	flag.BoolVar(&configDisableGenerate, "disable-generate", configDisableGenerate, "don't generate config file if not exists")
 }
 
 func main() {
@@ -31,7 +33,7 @@ func main() {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer cancel()
 
-	cfg, err := config.Load(configFile)
+	cfg, err := config.Load(configFile, !configDisableGenerate)
 	if err != nil {
 		logger.Fatalf("load config: %v", err)
 		return
