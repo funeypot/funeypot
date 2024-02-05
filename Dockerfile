@@ -1,11 +1,25 @@
-FROM rockylinux:9
+FROM golang:1.21 as builder
 
-ENV TZ=Asia/Shanghai
+WORKDIR /app
 
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+COPY . .
 
-COPY bin/linux/funeypot /usr/local/bin/funeypot
+RUN go build -o funeypot .
 
-EXPOSE 2222
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+VOLUME /etc/funeypot
+
+WORKDIR /data
+
+COPY --from=builder /app/funeypot /usr/local/bin/funeypot
+
+EXPOSE 22
+EXPOSE 80
+EXPOSE 21
 
 ENTRYPOINT ["funeypot"]
+
+CMD ["-c", "/etc/funeypot/funeypot.yaml"]
