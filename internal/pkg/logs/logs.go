@@ -35,6 +35,10 @@ func SetLevel(level string) Logger {
 	return def
 }
 
+func Close() {
+	_ = def.Sync()
+}
+
 type loggerInContext struct{}
 
 // From returns a Logger which is stored in context as a value,

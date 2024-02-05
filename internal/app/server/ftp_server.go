@@ -83,7 +83,6 @@ func (s *FtpServer) ClientConnected(cc ftpserver.ClientContext) (string, error) 
 
 func (s *FtpServer) ClientDisconnected(cc ftpserver.ClientContext) {
 	logs.Default().Debugf("ftp client disconnected: %s", cc.RemoteAddr().String())
-	return
 }
 
 func (s *FtpServer) AuthUser(cc ftpserver.ClientContext, user, pass string) (ftpserver.ClientDriver, error) {

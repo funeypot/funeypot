@@ -34,3 +34,6 @@ var providerSet = wire.NewSet(
 	server.NewHttpServer,
 	server.NewFtpServer,
 )
+
+// to suppress "unused" error
+var _ = providerSet

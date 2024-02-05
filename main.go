@@ -24,8 +24,9 @@ func init() {
 }
 
 func main() {
+	defer logs.Close()
+
 	flag.Parse()
-	defer logs.Default().Sync()
 
 	logger := logs.Default()
 	logger.Infof("funeypot %s starting", Version)

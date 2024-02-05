@@ -87,7 +87,6 @@ func (s *HttpServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("WWW-Authenticate", `Basic realm="Restricted"`)
 	http.Error(w, "unauthorized", http.StatusUnauthorized)
-	return
 }
 
 func (s *HttpServer) Startup(ctx context.Context, cancel context.CancelFunc) {
