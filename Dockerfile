@@ -4,9 +4,9 @@ WORKDIR /app
 
 COPY . .
 
-RUN go build -v -o funeypot .
+RUN CGO_ENABLED=0 go build -v -o funeypot .
 
-FROM alpine:3.12
+FROM alpine:3.19
 
 RUN apk --no-cache add ca-certificates
 
