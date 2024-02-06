@@ -14,11 +14,6 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 'latest'
-
       - name: Docker meta
         id: meta
         uses: docker/metadata-action@v5
@@ -42,7 +37,7 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GHCR
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
