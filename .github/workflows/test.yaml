@@ -19,12 +19,20 @@ jobs:
         with:
           go-version-file: go.mod
 
-      - name: Format
+      - name: Tidy
         run: |
           go mod tidy
+          git add --all && git diff --name-only --exit-code HEAD
+
+      - name: Format
+        run: |
           go fmt
-          git add --all
-          git diff --exit-code
+          git add --all && git diff --name-only --exit-code HEAD
+
+      - name: Generate
+        run: |
+          go generate ./...
+          git add --all && git diff --name-only --exit-code HEAD
 
       - name: Build
         run: go build -v ./...
