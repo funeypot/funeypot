@@ -183,11 +183,11 @@ func (h *Handler) reportAttempt(ctx context.Context, attempt *model.BruteAttempt
 	var score int
 	switch attempt.Kind {
 	case model.BruteAttemptKindSsh:
-		score, err = h.abuseipdbClient.ReportSsh(ctx, attempt.Ip, attempt.StartedAt, comment)
+		score, err = h.abuseipdbClient.ReportSsh(ctx, attempt.Ip, attempt.StoppedAt, comment)
 	case model.BruteAttemptKindHttp:
-		score, err = h.abuseipdbClient.ReportHttp(ctx, attempt.Ip, attempt.StartedAt, comment)
+		score, err = h.abuseipdbClient.ReportHttp(ctx, attempt.Ip, attempt.StoppedAt, comment)
 	case model.BruteAttemptKindFtp:
-		score, err = h.abuseipdbClient.ReportFtp(ctx, attempt.Ip, attempt.StartedAt, comment)
+		score, err = h.abuseipdbClient.ReportFtp(ctx, attempt.Ip, attempt.StoppedAt, comment)
 	}
 	if err != nil {
 		logger.Errorf("report attempt: %v", err)
