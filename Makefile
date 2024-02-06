@@ -1,3 +1,5 @@
+.PHONY: help tidy format generate test lint
+
 help:
 	@cat Makefile
 
@@ -10,7 +12,8 @@ format: tidy
 generate: tidy
 	go generate ./...
 
+test:
+	go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+
 lint:
 	golangci-lint run
-
-

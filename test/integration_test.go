@@ -21,7 +21,9 @@ func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() 
 	if err != nil {
 		t.Fatalf("load config: %v", err)
 	}
+
 	cfg.Log.Level = "error"
+	cfg.Database.Dsn = filepath.Join(t.TempDir(), "funeypot.db")
 
 	if modifyConfig != nil {
 		modifyConfig(cfg)
