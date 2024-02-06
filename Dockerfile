@@ -6,7 +6,7 @@ COPY . .
 
 RUN go build -v -o funeypot .
 
-FROM alpine:latest
+FROM alpine:3.12
 
 RUN apk --no-cache add ca-certificates
 
