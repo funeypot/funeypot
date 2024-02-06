@@ -6,6 +6,7 @@ package ipapi
 import (
 	"context"
 	"fmt"
+	"net"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -13,6 +14,11 @@ import (
 
 func Query(ctx context.Context, ip string) (*Response, error) {
 	result := &Response{}
+
+	if netIp := net.ParseIP(ip); !netIp.IsGlobalUnicast() || netIp.IsPrivate() {
+		result.Country = "Reserved IP"
+		return result, nil
+	}
 
 	resp, err := resty.New().R().
 		SetContext(ctx).
