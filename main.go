@@ -51,13 +51,9 @@ func main() {
 		return
 	}
 
-	entrypoint.SshServer.Startup(ctx, cancel)
-	entrypoint.HttpServer.Startup(ctx, cancel)
-	entrypoint.FtpServer.Startup(ctx, cancel)
+	entrypoint.Startup(ctx, cancel)
 
 	<-ctx.Done()
 	logger.Infof("shutdown")
-	_ = entrypoint.SshServer.Shutdown(ctx)
-	_ = entrypoint.HttpServer.Shutdown(ctx)
-	_ = entrypoint.FtpServer.Shutdown(ctx)
+	entrypoint.Shutdown(ctx)
 }
