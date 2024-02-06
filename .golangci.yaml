@@ -5,5 +5,5 @@ linters:
 linters-settings:
   goheader:
     template: |-
-      // Copyright {{ YEAR }} The Funeypot Authors. All rights reserved.
-      // SPDX-License-Identifier: MIT
+      Copyright {{ YEAR }} The Funeypot Authors. All rights reserved.
+      SPDX-License-Identifier: MIT
