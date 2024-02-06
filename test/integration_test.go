@@ -22,6 +22,7 @@ func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() 
 		t.Fatalf("load config: %v", err)
 	}
 
+	cfg.Ssh.Address = ":2222"
 	cfg.Log.Level = "error"
 	cfg.Database.Dsn = filepath.Join(t.TempDir(), "funeypot.db")
 
