@@ -7,6 +7,8 @@ on:
 jobs:
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -19,7 +21,6 @@ jobs:
             funeypot/funeypot
             ghcr.io/funeypot/funeypot
           tags: |
-            type=sha,prefix=nightly-,format=short
             type=raw,value=nightly
 
       - name: Set up QEMU
