@@ -21,7 +21,6 @@ jobs:
             funeypot/funeypot
             ghcr.io/funeypot/funeypot
           tags: |
-            type=sha,prefix=nightly-,format=short
             type=raw,value=nightly
 
       - name: Set up QEMU
