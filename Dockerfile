@@ -10,7 +10,7 @@ FROM alpine:3.19
 
 RUN apk --no-cache add ca-certificates
 
-VOLUME /etc/funeypot
+VOLUME /config
 
 WORKDIR /data
 
@@ -22,4 +22,4 @@ EXPOSE 21
 
 ENTRYPOINT ["funeypot"]
 
-CMD ["-c", "/etc/funeypot/funeypot.yaml"]
+CMD ["-c", "/config/funeypot.yaml"]
