@@ -6,6 +6,7 @@ package logs
 import (
 	"context"
 	"fmt"
+	"sync/atomic"
 
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -13,7 +14,7 @@ import (
 
 type Logger = *zap.SugaredLogger
 
-var def Logger
+var def atomic.Pointer[zap.SugaredLogger]
 
 func init() {
 	config := zap.NewDevelopmentConfig()
@@ -21,25 +22,27 @@ func init() {
 	if err != nil {
 		panic(fmt.Errorf("init logger: %w", err))
 	}
-	def = logger.Sugar()
+	def.Store(logger.Sugar())
 }
 
 func Default() Logger {
-	return def
+	return def.Load()
 }
 
 func SetLevel(level string) Logger {
 	l, err := zapcore.ParseLevel(level)
+	logger := def.Load()
 	if err != nil {
-		def.Errorf("ignore invalid log level %s: %v", level, err)
-		return def
+		logger.Errorf("ignore invalid log level %s: %v", level, err)
+		return logger
 	}
-	def = def.WithOptions(zap.IncreaseLevel(l))
-	return def
+	logger = logger.WithOptions(zap.IncreaseLevel(l))
+	def.Store(logger)
+	return logger
 }
 
 func Close() {
-	_ = def.Sync()
+	_ = def.Load().Sync()
 }
 
 type loggerInContext struct{}
