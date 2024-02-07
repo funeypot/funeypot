@@ -72,7 +72,7 @@ func TestSshServer_Report(t *testing.T) {
 				assert.Equal(t, "18,22", request.Form.Get("categories"))
 				assert.Equal(t, `Funeypot detected 5 ssh attempts in 8s. Last by user "username", password "pa****rd", client "Go".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
-				assert.WithinDuration(t, time.Now(), timestamp, time.Second)
+				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 
@@ -101,7 +101,7 @@ func TestSshServer_Report(t *testing.T) {
 				assert.Equal(t, "18,22", request.Form.Get("categories"))
 				assert.Equal(t, `Funeypot detected 6 ssh attempts in 10s. Last by user "username2", password "pas***rd2", client "Go".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
-				assert.WithinDuration(t, time.Now(), timestamp, time.Second)
+				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 

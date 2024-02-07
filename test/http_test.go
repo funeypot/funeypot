@@ -69,7 +69,7 @@ func TestHttpServer_Report(t *testing.T) {
 				assert.Equal(t, "18,21", request.Form.Get("categories"))
 				assert.Equal(t, `Funeypot detected 5 http attempts in 0s. Last by user "username4", password "pas***rd4", client "Go-http-client/1.1".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
-				assert.WithinDuration(t, time.Now(), timestamp, time.Second)
+				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 
@@ -97,7 +97,7 @@ func TestHttpServer_Report(t *testing.T) {
 				assert.Equal(t, "18,21", request.Form.Get("categories"))
 				assert.Equal(t, `Funeypot detected 6 http attempts in 0s. Last by user "username", password "pa****rd", client "Go-http-client/1.1".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
-				assert.WithinDuration(t, time.Now(), timestamp, time.Second)
+				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 

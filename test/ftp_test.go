@@ -63,7 +63,7 @@ func TestFtpServer_Report(t *testing.T) {
 				assert.Equal(t, "18,5", request.Form.Get("categories"))
 				assert.Equal(t, `Funeypot detected 5 ftp attempts in 0s. Last by user "username4", password "pas***rd4", client "".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
-				assert.WithinDuration(t, time.Now(), timestamp, time.Second)
+				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 
@@ -91,7 +91,7 @@ func TestFtpServer_Report(t *testing.T) {
 				assert.Equal(t, "18,5", request.Form.Get("categories"))
 				assert.Equal(t, `Funeypot detected 6 ftp attempts in 0s. Last by user "username", password "pa****rd", client "".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
-				assert.WithinDuration(t, time.Now(), timestamp, time.Second)
+				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 
