@@ -25,8 +25,7 @@ func TestFtpServer(t *testing.T) {
 	t.Run("anonymous", func(t *testing.T) {
 		client, err := ftp.Dial("127.0.0.1:2121")
 		require.NoError(t, err)
-		//lint:ignore errcheck
-		defer client.Quit()
+		defer client.Quit() // nolint:errcheck
 
 		err = client.Login("anonymous", "anonymous")
 		require.ErrorContains(t, err, "530 Authentication problem: invalid user or password")
@@ -35,8 +34,7 @@ func TestFtpServer(t *testing.T) {
 	t.Run("auth", func(t *testing.T) {
 		client, err := ftp.Dial("127.0.0.1:2121")
 		require.NoError(t, err)
-		//lint:ignore errcheck
-		defer client.Quit()
+		defer client.Quit() // nolint:errcheck
 
 		err = client.Login("username", "password")
 		require.ErrorContains(t, err, "530 Authentication problem: invalid user or password")
@@ -99,8 +97,7 @@ func TestFtpServer_Report(t *testing.T) {
 
 		client, err := ftp.Dial("127.0.0.1:2121")
 		require.NoError(t, err)
-		//lint:ignore errcheck
-		defer client.Quit()
+		defer client.Quit() // nolint:errcheck
 
 		_ = client.Login("username", "password")
 
