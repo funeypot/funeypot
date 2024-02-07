@@ -1,0 +1,21 @@
+pull_request_rules:
+  - name: Automatic merge
+    conditions:
+      - 'author=dependabot[bot]'
+      - -draft
+      - -merged
+      - -closed
+      - check-success=check
+      - check-success=codecov/patch
+      - check-success=codecov/project
+    actions:
+      queue:
+        method: squash
+        name: default
+
+queue_rules:
+  - name: default
+    conditions:
+      - check-success=check
+      - check-success=codecov/patch
+      - check-success=codecov/project
