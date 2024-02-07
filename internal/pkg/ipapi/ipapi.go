@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"net"
+	"net/http"
 	"strings"
 
 	"github.com/go-resty/resty/v2"
@@ -20,7 +21,9 @@ func Query(ctx context.Context, ip string) (*Response, error) {
 		return result, nil
 	}
 
-	resp, err := resty.New().R().
+	resp, err := resty.NewWithClient(&http.Client{
+		Transport: http.DefaultTransport,
+	}).R().
 		SetContext(ctx).
 		SetResult(result).
 		Get(fmt.Sprintf("http://ip-api.com/json/%s?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query", ip))
