@@ -25,6 +25,10 @@ func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() 
 		t.Fatalf("load config: %v", err)
 	}
 
+	// adjust config for testing
+	cfg.Ssh.Address = ":2222"
+	cfg.Http.Address = ":8080"
+	cfg.Ftp.Address = ":2121"
 	cfg.Log.Level = "error"
 	cfg.Database.Dsn = filepath.Join(t.TempDir(), "funeypot.db")
 
@@ -53,7 +57,6 @@ func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() 
 func waitServers(t *testing.T, cfg *config.Config) {
 	wg := &sync.WaitGroup{}
 	deadline := time.Now().Add(5 * time.Second)
-	interval := 100 * time.Millisecond
 
 	var (
 		sshErr  error
@@ -65,7 +68,7 @@ func waitServers(t *testing.T, cfg *config.Config) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			sshErr = waitTcp(deadline, interval, cfg.Ssh.Address)
+			sshErr = waitTcp(deadline, cfg.Ssh.Address)
 		}()
 	}
 
@@ -73,7 +76,7 @@ func waitServers(t *testing.T, cfg *config.Config) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			httpErr = waitTcp(deadline, interval, cfg.Http.Address)
+			httpErr = waitTcp(deadline, cfg.Http.Address)
 		}()
 	}
 
@@ -81,7 +84,7 @@ func waitServers(t *testing.T, cfg *config.Config) {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			ftpErr = waitTcp(deadline, interval, cfg.Ftp.Address)
+			ftpErr = waitTcp(deadline, cfg.Ftp.Address)
 		}()
 	}
 
@@ -98,7 +101,9 @@ func waitServers(t *testing.T, cfg *config.Config) {
 	}
 }
 
-func waitTcp(deadline time.Time, interval time.Duration, addr string) error {
+func waitTcp(deadline time.Time, addr string) error {
+	interval := 100 * time.Millisecond
+
 	_, port, err := net.SplitHostPort(addr)
 	if err != nil {
 		return fmt.Errorf("invalid address: %v", err)
@@ -117,4 +122,15 @@ func waitTcp(deadline time.Time, interval time.Duration, addr string) error {
 		time.Sleep(interval)
 	}
 	return retErr
+}
+
+func WaitAssert(timeout time.Duration, f func() bool) {
+	deadline := time.Now().Add(timeout)
+	interval := time.Millisecond
+	for time.Now().Before(deadline) {
+		if f() {
+			return
+		}
+		time.Sleep(interval)
+	}
 }
