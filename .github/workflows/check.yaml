@@ -8,47 +8,48 @@ on:
     branches: [ "main" ]
 
 jobs:
-  check:
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Set up Go
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-
       - name: Tidy
         run: |
           go mod tidy
           git add --all && git diff --name-only --exit-code HEAD
-
       - name: Format
         run: |
           go fmt
           git add --all && git diff --name-only --exit-code HEAD
-
       - name: Generate
         run: |
           go generate ./...
           git add --all && git diff --name-only --exit-code HEAD
-
-      - name: Build
-        run: go build -v ./...
-
-      - name: Test
-        run: go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
-
-      - name: Upload coverage
-        uses: codecov/codecov-action@v4
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Vet
         run: go vet -v ./...
-
       - name: Lint
         uses: golangci/golangci-lint-action@v3
         with:
           version: latest
+      - name: Build
+        run: go build -v ./...
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Test
+        run: go test -race -coverpkg=./... -coverprofile=coverage.out -covermode=atomic ./...
+      - name: Upload coverage
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
