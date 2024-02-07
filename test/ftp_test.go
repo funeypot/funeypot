@@ -25,7 +25,7 @@ func TestFtpServer(t *testing.T) {
 	t.Run("anonymous", func(t *testing.T) {
 		client, err := ftp.Dial("127.0.0.1:2121")
 		require.NoError(t, err)
-
+		//lint:ignore errcheck
 		defer client.Quit()
 
 		err = client.Login("anonymous", "anonymous")
@@ -35,6 +35,7 @@ func TestFtpServer(t *testing.T) {
 	t.Run("auth", func(t *testing.T) {
 		client, err := ftp.Dial("127.0.0.1:2121")
 		require.NoError(t, err)
+		//lint:ignore errcheck
 		defer client.Quit()
 
 		err = client.Login("username", "password")
@@ -98,6 +99,7 @@ func TestFtpServer_Report(t *testing.T) {
 
 		client, err := ftp.Dial("127.0.0.1:2121")
 		require.NoError(t, err)
+		//lint:ignore errcheck
 		defer client.Quit()
 
 		_ = client.Login("username", "password")
