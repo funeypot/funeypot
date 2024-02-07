@@ -68,14 +68,6 @@ func (db *Database) Create(ctx context.Context, value any) error {
 		Error
 }
 
-func (db *Database) Update(ctx context.Context, value any, fields ...string) error {
-	return db.db.WithContext(ctx).
-		Model(value).
-		Select(fields).
-		Updates(value).
-		Error
-}
-
 func (db *Database) Save(ctx context.Context, value any) error {
 	return db.db.WithContext(ctx).
 		Save(value).
