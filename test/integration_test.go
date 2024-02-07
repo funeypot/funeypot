@@ -5,7 +5,10 @@ package test
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"path/filepath"
+	"sync"
 	"testing"
 	"time"
 
@@ -38,10 +41,80 @@ func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() 
 	}
 
 	entrypoint.Startup(ctx, cancel)
-	time.Sleep(time.Second)
+
+	waitServers(t, cfg)
 
 	return func() {
 		cancel()
 		entrypoint.Shutdown(ctx)
 	}
+}
+
+func waitServers(t *testing.T, cfg *config.Config) {
+	wg := &sync.WaitGroup{}
+	deadline := time.Now().Add(5 * time.Second)
+	interval := 100 * time.Millisecond
+
+	var (
+		sshErr  error
+		httpErr error
+		ftpErr  error
+	)
+
+	{
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			sshErr = waitTcp(deadline, interval, cfg.Ssh.Address)
+		}()
+	}
+
+	if cfg.Http.Enabled {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			httpErr = waitTcp(deadline, interval, cfg.Http.Address)
+		}()
+	}
+
+	if cfg.Ftp.Enabled {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			ftpErr = waitTcp(deadline, interval, cfg.Ftp.Address)
+		}()
+	}
+
+	wg.Wait()
+
+	if sshErr != nil {
+		t.Fatalf("ssh server not ready: %v", sshErr)
+	}
+	if httpErr != nil {
+		t.Fatalf("http server not ready: %v", httpErr)
+	}
+	if ftpErr != nil {
+		t.Fatalf("ftp server not ready: %v", ftpErr)
+	}
+}
+
+func waitTcp(deadline time.Time, interval time.Duration, addr string) error {
+	_, port, err := net.SplitHostPort(addr)
+	if err != nil {
+		return fmt.Errorf("invalid address: %v", err)
+	}
+	addr = fmt.Sprintf("127.0.0.1:%s", port)
+
+	retErr := fmt.Errorf("server not ready: %s", addr)
+	for time.Now().Before(deadline) {
+		conn, err := net.DialTimeout("tcp", addr, interval)
+		if err == nil {
+			retErr = nil
+			_ = conn.Close()
+			break
+		}
+		retErr = err
+		time.Sleep(interval)
+	}
+	return retErr
 }
