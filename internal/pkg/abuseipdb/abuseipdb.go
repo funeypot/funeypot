@@ -6,21 +6,28 @@ package abuseipdb
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-resty/resty/v2"
 )
 
+const ReportUrl = "https://api.abuseipdb.com/api/v2/report"
+
 type Client struct {
 	key      string
 	interval time.Duration
+	client   *resty.Client
 }
 
 func NewClient(key string, interval time.Duration) *Client {
 	return &Client{
 		key:      key,
 		interval: interval,
+		client: resty.NewWithClient(&http.Client{
+			Transport: http.DefaultTransport,
+		}),
 	}
 }
 
@@ -50,7 +57,7 @@ func (c *Client) ReportFtp(ctx context.Context, ip string, timestamp time.Time, 
 func (c *Client) Report(ctx context.Context, ip string, categories []string, timestamp time.Time, comment string) (int, error) {
 	result := &response{}
 
-	resp, err := resty.New().R().
+	resp, err := c.client.R().
 		SetContext(ctx).
 		SetHeader("Key", c.key).
 		SetFormData(map[string]string{
@@ -60,7 +67,7 @@ func (c *Client) Report(ctx context.Context, ip string, categories []string, tim
 			"comment":    comment,
 		}).
 		SetResult(result).
-		Post("https://api.abuseipdb.com/api/v2/report")
+		Post(ReportUrl)
 	if err != nil {
 		return 0, fmt.Errorf("do request: %w", err)
 	}

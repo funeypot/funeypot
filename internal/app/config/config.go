@@ -175,6 +175,9 @@ func (c *Config) Validate() error {
 	if err := c.Http.Validate(); err != nil {
 		return fmt.Errorf("http: %w", err)
 	}
+	if err := c.Ftp.Validate(); err != nil {
+		return fmt.Errorf("ftp: %w", err)
+	}
 	if err := c.Database.Validate(); err != nil {
 		return fmt.Errorf("database: %w", err)
 	}

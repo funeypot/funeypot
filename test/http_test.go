@@ -4,7 +4,7 @@
 package test
 
 import (
-	"net"
+	"fmt"
 	"net/http"
 	"testing"
 	"time"
@@ -13,49 +13,46 @@ import (
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
-	"golang.org/x/crypto/ssh"
+	"github.com/stretchr/testify/require"
 )
 
-func TestSshServer(t *testing.T) {
-	defer PrepareServers(t, nil)()
-
-	sshConfig := &ssh.ClientConfig{
-		User:            "username",
-		Auth:            []ssh.AuthMethod{ssh.Password("password")},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
-
-	start := time.Now()
-	_, err := ssh.Dial("tcp", "127.0.0.1:2222", sshConfig)
-	assert.ErrorContains(t, err, "ssh: handshake failed: ssh: unable to authenticate")
-	assert.Greater(t, time.Since(start), 2*time.Second)
-}
-
-func TestSshServer_FixedKey(t *testing.T) {
+func TestHttpServer(t *testing.T) {
 	defer PrepareServers(t, func(cfg *config.Config) {
-		cfg.Ssh.KeySeed = "test"
+		cfg.Http.Enabled = true
 	})()
 
-	sshConfig := &ssh.ClientConfig{
-		User: "username",
-		Auth: []ssh.AuthMethod{ssh.Password("password")},
-		HostKeyCallback: func(hostname string, remote net.Addr, key ssh.PublicKey) error {
-			assert.Equal(t, "SHA256:2HNubLBfVg7yz29A8MBN1wWgRf2tEggxySxBKtm9hJ4", ssh.FingerprintSHA256(key))
-			return nil
-		},
-	}
+	t.Run("no auth", func(t *testing.T) {
+		resp, err := http.Get("http://127.0.0.1:8080")
+		require.NoError(t, err)
 
-	start := time.Now()
-	_, err := ssh.Dial("tcp", "127.0.0.1:2222", sshConfig)
-	assert.ErrorContains(t, err, "ssh: handshake failed: ssh: unable to authenticate")
-	assert.Greater(t, time.Since(start), 2*time.Second)
+		assert.Equal(t, 401, resp.StatusCode)
+		assert.Equal(t, `Basic realm="Restricted"`, resp.Header.Get("WWW-Authenticate"))
+	})
+
+	t.Run("auth", func(t *testing.T) {
+		req, err := http.NewRequest("GET", "http://127.0.0.1:8080", nil)
+		require.NoError(t, err)
+		req.SetBasicAuth("username", "password")
+
+		resp, err := http.DefaultClient.Do(req)
+		require.NoError(t, err)
+
+		assert.NoError(t, err)
+		assert.Equal(t, 401, resp.StatusCode)
+		assert.Equal(t, `Basic realm="Restricted"`, resp.Header.Get("WWW-Authenticate"))
+	})
 }
 
-func TestSshServer_Report(t *testing.T) {
+func TestHttpServer_Report(t *testing.T) {
+	HttpClient := &http.Client{
+		Transport: http.DefaultTransport,
+	}
+
 	httpmock.Activate()
 	defer httpmock.DeactivateAndReset()
 
 	defer PrepareServers(t, func(cfg *config.Config) {
+		cfg.Http.Enabled = true
 		cfg.Abuseipdb.Enabled = true
 		cfg.Abuseipdb.Key = "test_key"
 		cfg.Abuseipdb.Interval = 0
@@ -69,21 +66,20 @@ func TestSshServer_Report(t *testing.T) {
 				assert.Equal(t, "application/x-www-form-urlencoded", request.Header.Get("Content-Type"))
 				assert.NoError(t, request.ParseForm())
 				assert.Equal(t, "127.0.0.1", request.Form.Get("ip"))
-				assert.Equal(t, "18,22", request.Form.Get("categories"))
-				assert.Equal(t, `Funeypot detected 5 ssh attempts in 8s. Last by user "username", password "pa****rd", client "Go".`, request.Form.Get("comment"))
+				assert.Equal(t, "18,21", request.Form.Get("categories"))
+				assert.Equal(t, `Funeypot detected 5 http attempts in 0s. Last by user "username4", password "pas***rd4", client "Go-http-client/1.1".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
 				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 
-		sshConfig := &ssh.ClientConfig{
-			User:            "username",
-			Auth:            []ssh.AuthMethod{ssh.Password("password")},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		}
 		for i := 0; i < 5; i++ {
-			_, _ = ssh.Dial("tcp", "127.0.0.1:2222", sshConfig)
+			req, err := http.NewRequest("GET", "http://127.0.0.1:8080", nil)
+			require.NoError(t, err)
+			req.SetBasicAuth(fmt.Sprintf("username%d", i), fmt.Sprintf("password%d", i))
+			_, _ = HttpClient.Do(req)
 		}
+
 		WaitAssert(time.Second, func() bool {
 			return httpmock.GetTotalCallCount() > 0
 		})
@@ -98,19 +94,17 @@ func TestSshServer_Report(t *testing.T) {
 				assert.Equal(t, "application/x-www-form-urlencoded", request.Header.Get("Content-Type"))
 				assert.NoError(t, request.ParseForm())
 				assert.Equal(t, "127.0.0.1", request.Form.Get("ip"))
-				assert.Equal(t, "18,22", request.Form.Get("categories"))
-				assert.Equal(t, `Funeypot detected 6 ssh attempts in 10s. Last by user "username2", password "pas***rd2", client "Go".`, request.Form.Get("comment"))
+				assert.Equal(t, "18,21", request.Form.Get("categories"))
+				assert.Equal(t, `Funeypot detected 6 http attempts in 0s. Last by user "username", password "pa****rd", client "Go-http-client/1.1".`, request.Form.Get("comment"))
 				timestamp, _ := time.Parse(time.RFC3339, request.Form.Get("timestamp"))
 				assert.WithinDuration(t, time.Now(), timestamp, 2*time.Second)
 				return httpmock.NewStringResponse(200, `{}`), nil
 			})
 
-		sshConfig := &ssh.ClientConfig{
-			User:            "username2",
-			Auth:            []ssh.AuthMethod{ssh.Password("password2")},
-			HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-		}
-		_, _ = ssh.Dial("tcp", "127.0.0.1:2222", sshConfig)
+		req, err := http.NewRequest("GET", "http://127.0.0.1:8080", nil)
+		require.NoError(t, err)
+		req.SetBasicAuth("username", "password")
+		_, _ = HttpClient.Do(req)
 
 		WaitAssert(time.Second, func() bool {
 			return httpmock.GetTotalCallCount() > 0

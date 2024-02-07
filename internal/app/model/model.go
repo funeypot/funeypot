@@ -68,14 +68,6 @@ func (db *Database) Create(ctx context.Context, value any) error {
 		Error
 }
 
-func (db *Database) Update(ctx context.Context, value any, fields ...string) error {
-	return db.db.WithContext(ctx).
-		Model(value).
-		Select(fields).
-		Updates(value).
-		Error
-}
-
 func (db *Database) Save(ctx context.Context, value any) error {
 	return db.db.WithContext(ctx).
 		Save(value).
@@ -83,8 +75,11 @@ func (db *Database) Save(ctx context.Context, value any) error {
 }
 
 func truncateString(s string, max int) string {
-	if len(s) > max {
-		return s[:max-3] + "..."
+	if len(s) <= max {
+		return s
 	}
-	return s
+	if max <= 3 {
+		return s[:max]
+	}
+	return s[:max-3] + "..."
 }

@@ -80,6 +80,9 @@ func (h *Handler) handleQueue(ctx context.Context) {
 			cancel()
 		case <-ctx.Done():
 			logger.Infof("handle queue done")
+			if len(h.queue) > 0 {
+				logger.Warnf("ignore %d unhandled requests", len(h.queue))
+			}
 			return
 		}
 	}
@@ -87,6 +90,8 @@ func (h *Handler) handleQueue(ctx context.Context) {
 
 func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 	logger := logs.From(ctx)
+
+	logger.Debugf("handle request: %v", request)
 
 	attempt, err := h.db.IncrBruteAttempt(
 		ctx,
