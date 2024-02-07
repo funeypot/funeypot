@@ -6,7 +6,6 @@ package test
 import (
 	"net/http"
 	"testing"
-	"time"
 
 	"github.com/wolfogre/funeypot/internal/app/config"
 
@@ -45,8 +44,26 @@ func TestDashboard(t *testing.T) {
 		assert.Equal(t, 401, resp.StatusCode)
 	})
 
-	// wait for the previous test to be written to the database
-	time.Sleep(time.Second)
+	t.Run("wrong method", func(t *testing.T) {
+		t.Run("/api/v1/self", func(t *testing.T) {
+			req, err := http.NewRequest("POST", "http://127.0.0.1:8080/api/v1/self", nil)
+			require.NoError(t, err)
+			req.SetBasicAuth("dashboard_username", "dashboard_password")
+
+			resp, err := http.DefaultClient.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, 405, resp.StatusCode)
+		})
+		t.Run("/api/v1/points", func(t *testing.T) {
+			req, err := http.NewRequest("POST", "http://127.0.0.1:8080/api/v1/points", nil)
+			require.NoError(t, err)
+			req.SetBasicAuth("dashboard_username", "dashboard_password")
+
+			resp, err := http.DefaultClient.Do(req)
+			require.NoError(t, err)
+			assert.Equal(t, 405, resp.StatusCode)
+		})
+	})
 
 	t.Run("auth", func(t *testing.T) {
 		req, err := http.NewRequest("GET", "http://127.0.0.1:8080", nil)
@@ -55,8 +72,6 @@ func TestDashboard(t *testing.T) {
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-
-		assert.NoError(t, err)
 		assert.Equal(t, 200, resp.StatusCode)
 	})
 
@@ -67,8 +82,6 @@ func TestDashboard(t *testing.T) {
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-
-		assert.NoError(t, err)
 		assert.Equal(t, 200, resp.StatusCode)
 	})
 
@@ -79,8 +92,6 @@ func TestDashboard(t *testing.T) {
 
 		resp, err := http.DefaultClient.Do(req)
 		require.NoError(t, err)
-
-		assert.NoError(t, err)
 		assert.Equal(t, 200, resp.StatusCode)
 	})
 }
