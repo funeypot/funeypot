@@ -25,7 +25,7 @@ func TestHttpServer(t *testing.T) {
 		resp, err := http.Get("http://127.0.0.1:8080")
 		require.NoError(t, err)
 
-		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		assert.Equal(t, 401, resp.StatusCode)
 		assert.Equal(t, `Basic realm="Restricted"`, resp.Header.Get("WWW-Authenticate"))
 	})
 
@@ -38,7 +38,7 @@ func TestHttpServer(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NoError(t, err)
-		assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		assert.Equal(t, 401, resp.StatusCode)
 		assert.Equal(t, `Basic realm="Restricted"`, resp.Header.Get("WWW-Authenticate"))
 	})
 }
