@@ -28,7 +28,7 @@ func NewMaxmindQuerier(file string) (*MaxmindQuerier, error) {
 
 	reader, err := geoip2.Open(file)
 	if err != nil {
-		return nil, fmt.Errorf("open maxmind db: %w", err)
+		return nil, fmt.Errorf("open maxmind db %q: %w", file, err)
 	}
 	return &MaxmindQuerier{reader: reader}, nil
 }

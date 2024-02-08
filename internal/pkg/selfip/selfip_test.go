@@ -20,18 +20,20 @@ func TestUrls(t *testing.T) {
 	expected := ""
 
 	for _, url := range urls {
-		startedAt := time.Now()
-		ip, err := getFrom(context.Background(), url)
-		duration := time.Since(startedAt)
+		t.Run(url, func(t *testing.T) {
+			startedAt := time.Now()
+			ip, err := getFrom(context.Background(), url)
+			duration := time.Since(startedAt)
 
-		require.NoError(t, err)
-		if expected == "" {
-			expected = ip
-		}
+			require.NoError(t, err)
+			if expected == "" {
+				expected = ip
+			}
 
-		assert.Equal(t, expected, ip)
+			assert.Equal(t, expected, ip)
 
-		t.Logf("%s: %s (%s)", url, ip, duration)
+			t.Logf("%s (%s)", ip, duration)
+		})
 	}
 }
 

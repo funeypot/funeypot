@@ -46,7 +46,11 @@ func TestNewMaxmindQuerier(t *testing.T) {
 	})
 
 	t.Run("no embed", func(t *testing.T) {
+		oldGeoLite2City := geoLite2City
 		geoLite2City = nil
+		defer func() {
+			geoLite2City = oldGeoLite2City
+		}()
 		_, err := NewMaxmindQuerier("embed")
 		require.ErrorContains(t, err, "you are running a version without the embedded")
 	})
