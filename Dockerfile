@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -v -o funeypot .
+RUN CGO_ENABLED=0 go build -v -buildvcs=false -o funeypot .
 
 FROM alpine:3.19
 
