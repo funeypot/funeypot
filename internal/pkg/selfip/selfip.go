@@ -22,7 +22,6 @@ var (
 		"https://ipinfo.io/ip",
 		"https://ipecho.net/plain",
 		"https://myexternalip.com/raw",
-		"https://ifconfig.co/ip",
 	}
 )
 
