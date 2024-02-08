@@ -14,8 +14,6 @@ import (
 	"github.com/oschwald/geoip2-golang"
 )
 
-const embedFile = "embed"
-
 type MaxmindQuerier struct {
 	reader *geoip2.Reader
 }
@@ -68,31 +66,30 @@ func (q *MaxmindQuerier) Query(ctx context.Context, ip string) (*Info, error) {
 }
 
 func releaseEmbed(file string) (string, error) {
-	if file != embedFile {
-		if len(geoLite2City) > 1 {
-			// release the memory
-			geoLite2City = []byte{0}
+	embed := len(geoLite2City) > 0
+
+	tempDir := filepath.Join(os.TempDir(), "funeypot")
+	tempFile := filepath.Join(tempDir, "GeoLite2-City.mmdb")
+
+	if len(geoLite2City) > 1 {
+		// release the data to tempFile
+		if err := os.MkdirAll(tempDir, 0755); err != nil {
+			return "", fmt.Errorf("create tempDir %q: %w", tempDir, err)
 		}
-		return file, nil
+		if err := os.WriteFile(tempFile, geoLite2City, 0644); err != nil {
+			return "", fmt.Errorf("write tempFile %q: %w", tempFile, err)
+		}
+		// free the memory, keep 1 byte to indicate the release
+		geoLite2City = []byte{0}
 	}
-	if geoLite2City == nil {
+
+	if file == "embed" {
+		if embed {
+			return tempFile, nil
+		}
 		return "", fmt.Errorf("you are running a version without the embedded ip geo database, " +
 			"please use a different version or provide the path to the database file")
 	}
-	if len(geoLite2City) == 1 {
-		return "", fmt.Errorf("embedded ip geo database has been already released")
-	}
 
-	dir := filepath.Join(os.TempDir(), "funeypot")
-	file = filepath.Join(dir, "GeoLite2-City.mmdb")
-	if err := os.MkdirAll(dir, 0755); err != nil {
-		return "", fmt.Errorf("create dir %q: %w", dir, err)
-	}
-	if err := os.WriteFile(file, geoLite2City, 0644); err != nil {
-		return "", fmt.Errorf("write file %q: %w", file, err)
-	}
-
-	// release the memory
-	geoLite2City = []byte{0}
 	return file, nil
 }

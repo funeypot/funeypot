@@ -37,11 +37,10 @@ func TestNewMaxmindQuerier(t *testing.T) {
 	t.Run("release again", func(t *testing.T) {
 		_, _ = NewMaxmindQuerier("embed")
 		_, err := NewMaxmindQuerier("embed")
-		require.ErrorContains(t, err, "already released")
+		require.NoError(t, err)
 	})
 
 	t.Run("use no embed", func(t *testing.T) {
-		geoLite2City = []byte("pretend there is an embed, but it has not been released.")
 		_, err := NewMaxmindQuerier("test.mmdb")
 		require.ErrorContains(t, err, "no such file or directory")
 	})
