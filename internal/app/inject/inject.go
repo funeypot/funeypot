@@ -4,47 +4,21 @@
 package inject
 
 import (
-	"context"
-
 	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/dashboard"
 	"github.com/wolfogre/funeypot/internal/app/model"
 	"github.com/wolfogre/funeypot/internal/app/server"
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
+	"github.com/wolfogre/funeypot/internal/pkg/ipgeo"
 
 	"github.com/google/wire"
 )
-
-type Entrypoint struct {
-	Config     *config.Config
-	SshServer  *server.SshServer
-	HttpServer *server.HttpServer
-	FtpServer  *server.FtpServer
-}
-
-func (e *Entrypoint) Startup(ctx context.Context, cancel context.CancelFunc) {
-	e.SshServer.Startup(ctx, cancel)
-	e.HttpServer.Startup(ctx, cancel)
-	e.FtpServer.Startup(ctx, cancel)
-}
-
-func (e *Entrypoint) Shutdown(ctx context.Context) {
-	logger := logs.From(ctx)
-	if err := e.SshServer.Shutdown(ctx); err != nil {
-		logger.Warnf("shutdown ssh server: %v", err)
-	}
-	if err := e.HttpServer.Shutdown(ctx); err != nil {
-		logger.Warnf("shutdown http server: %v", err)
-	}
-	if err := e.FtpServer.Shutdown(ctx); err != nil {
-		logger.Warnf("shutdown ftp server: %v", err)
-	}
-}
 
 var providerSet = wire.NewSet(
 	newEntrypoint,
 	wire.FieldsOf(new(*config.Config),
 		"Database",
+		"Ipgeo",
 		"Abuseipdb",
 		"Dashboard",
 		"Ssh",
@@ -53,6 +27,7 @@ var providerSet = wire.NewSet(
 	),
 	model.NewDatabase,
 	newAbuseipdbClient,
+	newIpgeoQuerier,
 	dashboard.NewServer,
 	server.NewHandler,
 	server.NewSshServer,
@@ -62,3 +37,14 @@ var providerSet = wire.NewSet(
 
 // to suppress "unused" error
 var _ = providerSet
+
+func newAbuseipdbClient(cfg config.Abuseipdb) *abuseipdb.Client {
+	if !cfg.Enabled {
+		return nil
+	}
+	return abuseipdb.NewClient(cfg.Key, cfg.Interval)
+}
+
+func newIpgeoQuerier(cfg config.Ipgeo) (ipgeo.Querier, error) {
+	return ipgeo.NewMaxmindQuerier(cfg.File)
+}

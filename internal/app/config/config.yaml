@@ -31,6 +31,12 @@ ftp:
   # The address to listen on.
   address: ":21"
 
+# Configuration for IP Geolocation
+ipgeo:
+  # The path to the IP geolocation database.
+  # "embed" means to use the embedded database, it the latest version of GeoLite2-City.mmdb.
+  file: "embed"
+
 # Configuration for database
 database:
   # The driver of the database, available values: "sqlite", "postgres"

@@ -14,20 +14,22 @@ import (
 
 	"github.com/wolfogre/funeypot/internal/app/config"
 	"github.com/wolfogre/funeypot/internal/app/model"
-	"github.com/wolfogre/funeypot/internal/pkg/ipapi"
+	"github.com/wolfogre/funeypot/internal/pkg/ipgeo"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/wolfogre/funeypot/internal/pkg/selfip"
 )
 
 type Server struct {
 	username string
 	password string
 
-	db *model.Database
+	db           *model.Database
+	ipgeoQuerier ipgeo.Querier
 
 	static http.Handler
 }
 
-func NewServer(cfg config.Dashboard, db *model.Database) (*Server, error) {
+func NewServer(cfg config.Dashboard, db *model.Database, ipgeoQuerier ipgeo.Querier) (*Server, error) {
 	if !cfg.Enabled {
 		return nil, nil
 	}
@@ -37,10 +39,11 @@ func NewServer(cfg config.Dashboard, db *model.Database) (*Server, error) {
 		return nil, err
 	}
 	return &Server{
-		username: cfg.Username,
-		password: cfg.Password,
-		db:       db,
-		static:   http.FileServer(http.FS(s)),
+		username:     cfg.Username,
+		password:     cfg.Password,
+		db:           db,
+		ipgeoQuerier: ipgeoQuerier,
+		static:       http.FileServer(http.FS(s)),
 	}, nil
 }
 
@@ -101,16 +104,26 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 		after = time.Now().AddDate(0, 0, -30)
 	}
 
-	pointM := map[string]struct{}{}
-	var points []*responsePoint
 	next := after
-	if err := s.db.ScanBruteAttempt(ctx, after, func(attempt *model.BruteAttempt, geo *model.IpGeo) bool {
+	attempts, err := s.db.FindBruteAttempt(ctx, after)
+	if err != nil {
+		logger.Errorf("find ssh attempt: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	points := make([]*responsePoint, 0, len(attempts))
+	pointM := make(map[string]struct{}, len(attempts))
+
+	for _, attempt := range attempts {
 		if _, ok := pointM[attempt.Ip]; ok {
-			return true
+			continue
 		}
 		pointM[attempt.Ip] = struct{}{}
-		if geo == nil {
-			return true
+		geo, err := s.ipgeoQuerier.Query(ctx, attempt.Ip)
+		if err != nil {
+			logger.Errorf("query geo: %v", err)
+			continue
 		}
 		points = append(points, &responsePoint{
 			Ip:          attempt.Ip,
@@ -122,11 +135,6 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 		if attempt.UpdatedAt.After(next) {
 			next = attempt.UpdatedAt
 		}
-		return true
-	}); err != nil {
-		logger.Errorf("scan ssh attempt: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
 	}
 
 	if err := json.NewEncoder(w).Encode(&responseGetPoints{
@@ -148,16 +156,23 @@ func (s *Server) handleGetSelf(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	logger := logs.From(ctx)
 
-	resp, err := ipapi.Query(ctx, "")
+	selfIp, err := selfip.Get(ctx)
 	if err != nil {
-		logger.Errorf("query ipapi: %v", err)
+		logger.Errorf("get self ip: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	geo, err := s.ipgeoQuerier.Query(ctx, selfIp)
+	if err != nil {
+		logger.Errorf("query geo: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.NewEncoder(w).Encode(&responseGetSelf{
-		Latitude:  resp.Lat,
-		Longitude: resp.Lon,
+		Latitude:  geo.Latitude,
+		Longitude: geo.Longitude,
 	}); err != nil {
 		logger.Errorf("encode response: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
