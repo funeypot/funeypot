@@ -23,16 +23,21 @@ func NewEntrypoint(ctx context.Context, cfg *config.Config) (*Entrypoint, error)
 	if err != nil {
 		return nil, err
 	}
+	ipgeo := cfg.Ipgeo
+	querier, err := newIpgeoQuerier(ipgeo)
+	if err != nil {
+		return nil, err
+	}
 	abuseipdb := cfg.Abuseipdb
 	client := newAbuseipdbClient(abuseipdb)
-	handler := server.NewHandler(ctx, modelDatabase, client)
+	handler := server.NewHandler(ctx, modelDatabase, querier, client)
 	sshServer, err := server.NewSshServer(ssh, handler)
 	if err != nil {
 		return nil, err
 	}
 	http := cfg.Http
 	configDashboard := cfg.Dashboard
-	dashboardServer, err := dashboard.NewServer(configDashboard, modelDatabase)
+	dashboardServer, err := dashboard.NewServer(configDashboard, modelDatabase, querier)
 	if err != nil {
 		return nil, err
 	}

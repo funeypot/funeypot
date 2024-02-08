@@ -10,7 +10,7 @@ import (
 
 	"github.com/wolfogre/funeypot/internal/app/model"
 	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
-	"github.com/wolfogre/funeypot/internal/pkg/ipapi"
+	"github.com/wolfogre/funeypot/internal/pkg/ipgeo"
 	"github.com/wolfogre/funeypot/internal/pkg/logs"
 )
 
@@ -39,13 +39,15 @@ func (r Request) ShortSessionId() string {
 type Handler struct {
 	db              *model.Database
 	abuseipdbClient *abuseipdb.Client
+	ipgeoQuerier    ipgeo.Querier
 
 	queue chan *Request
 }
 
-func NewHandler(ctx context.Context, db *model.Database, abuseipdbClient *abuseipdb.Client) *Handler {
+func NewHandler(ctx context.Context, db *model.Database, ipgeoQuerier ipgeo.Querier, abuseipdbClient *abuseipdb.Client) *Handler {
 	ret := &Handler{
 		db:              db,
+		ipgeoQuerier:    ipgeoQuerier,
 		abuseipdbClient: abuseipdbClient,
 		queue:           make(chan *Request, 1000),
 	}
@@ -115,46 +117,18 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 		"client_version", request.ClientVersion,
 	)
 
-	geo, err := h.getIpGeo(ctx, request.Ip)
+	geo, err := h.ipgeoQuerier.Query(ctx, request.Ip)
 	if err != nil {
 		loginLogger.Errorf("get ip geo: %v", err)
 	} else {
 		loginLogger = loginLogger.With(
 			"location", geo.Location,
-			"isp", geo.Isp,
 		)
 	}
 
 	loginLogger.Infof("login")
 
 	h.reportAttempt(ctx, attempt)
-}
-
-func (h *Handler) getIpGeo(ctx context.Context, ip string) (*model.IpGeo, error) {
-	logger := logs.From(ctx)
-
-	geo, ok, err := h.db.TaskIpGeo(ctx, ip)
-	if err != nil {
-		return nil, fmt.Errorf("get ip geo: %w", err)
-	}
-
-	if ok && time.Since(geo.CreatedAt) < 24*time.Hour {
-		return geo, nil
-	}
-
-	result, err := ipapi.Query(ctx, ip)
-	if err != nil {
-		return nil, err
-	}
-
-	geo = (&model.IpGeo{
-		Ip: ip,
-	}).FillIpapiResponse(result)
-	if err := h.db.Save(ctx, geo); err != nil {
-		logger.Errorf("save ip geo: %v", err)
-		// go on
-	}
-	return geo, nil
 }
 
 func (h *Handler) reportAttempt(ctx context.Context, attempt *model.BruteAttempt) {
