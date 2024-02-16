@@ -5,7 +5,8 @@ pull_request_rules:
       - -draft
       - -merged
       - -closed
-      - check-success=check
+      - check-success=build
+      - check-success=test
       - check-success=codecov/patch
       - check-success=codecov/project
     actions:
@@ -16,6 +17,7 @@ pull_request_rules:
 queue_rules:
   - name: default
     conditions:
-      - check-success=check
+      - check-success=build
+      - check-success=test
       - check-success=codecov/patch
       - check-success=codecov/project
