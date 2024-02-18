@@ -117,7 +117,7 @@ func (h *Handler) handleRequest(ctx context.Context, request *Request) {
 		"client_version", request.ClientVersion,
 	)
 
-	geo, err := h.queryGeo(ctx, request.Ip)
+	geo, err := h.ipgeoQuerier.Query(ctx, request.Ip)
 	if err != nil {
 		loginLogger.Errorf("get ip geo: %v", err)
 	} else {
@@ -185,31 +185,4 @@ func (h *Handler) reportAttempt(ctx context.Context, attempt *model.BruteAttempt
 	if err := h.db.Create(ctx, newReport); err != nil {
 		logger.Errorf("create report: %v", err)
 	}
-}
-
-func (h *Handler) queryGeo(ctx context.Context, ip string) (*ipgeo.Info, error) {
-	logger := logs.From(ctx)
-
-	geo, ok, err := h.db.TakeIpGeo(ctx, ip)
-	if err != nil {
-		return nil, fmt.Errorf("get ip geo: %w", err)
-	}
-
-	if ok && time.Since(geo.CreatedAt) < 24*time.Hour {
-		return geo.Info(), nil
-	}
-
-	info, err := h.ipgeoQuerier.Query(ctx, ip)
-	if err != nil {
-		return nil, err
-	}
-
-	geo = (&model.IpGeo{
-		Ip: ip,
-	}).FillInfo(info)
-	if err := h.db.Save(ctx, geo); err != nil {
-		logger.Errorf("save ip geo: %v", err)
-		// go on
-	}
-	return info, nil
 }

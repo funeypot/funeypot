@@ -6,6 +6,7 @@ package model
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
 	"time"
 
@@ -62,4 +63,23 @@ func (db *Database) TakeIpGeo(ctx context.Context, ip string) (*IpGeo, bool, err
 		return nil, false, err
 	}
 	return geo, true, nil
+}
+
+func NewCachedIpGeoQuerier(querier ipgeo.Querier, db *Database) ipgeo.Querier {
+	return ipgeo.NewCachedQuerier(querier,
+		func(ctx context.Context, ip string) (*ipgeo.Info, bool, error) {
+			geo, ok, err := db.TakeIpGeo(ctx, ip)
+			if err != nil {
+				return nil, false, fmt.Errorf("get ip geo: %w", err)
+			}
+			if ok && time.Since(geo.CreatedAt) < 24*time.Hour {
+				return geo.Info(), true, nil
+			}
+			return nil, false, nil
+		},
+		func(ctx context.Context, ip string, info *ipgeo.Info) error {
+			return db.Save(ctx, (&IpGeo{
+				Ip: ip,
+			}).FillInfo(info))
+		})
 }

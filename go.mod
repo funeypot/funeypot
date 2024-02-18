@@ -11,7 +11,6 @@ require (
 	github.com/google/wire v0.5.0
 	github.com/jarcoal/httpmock v1.3.1
 	github.com/jlaffaye/ftp v0.2.0
-	github.com/oschwald/geoip2-golang v1.9.0
 	github.com/stretchr/testify v1.8.4
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.19.0
@@ -36,7 +35,6 @@ require (
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/mattn/go-isatty v0.0.17 // indirect
-	github.com/oschwald/maxminddb-golang v1.11.0 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect

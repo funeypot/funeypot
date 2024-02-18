@@ -18,7 +18,6 @@ var providerSet = wire.NewSet(
 	newEntrypoint,
 	wire.FieldsOf(new(*config.Config),
 		"Database",
-		"Ipgeo",
 		"Abuseipdb",
 		"Dashboard",
 		"Ssh",
@@ -32,7 +31,7 @@ var providerSet = wire.NewSet(
 	server.NewSshServer,
 	server.NewHttpServer,
 	server.NewFtpServer,
-	ipgeo.NewIpapiComQuerier,
+	newCachedIpGeoQuerier,
 )
 
 // to suppress "unused" error
@@ -43,4 +42,8 @@ func newAbuseipdbClient(cfg config.Abuseipdb) *abuseipdb.Client {
 		return nil
 	}
 	return abuseipdb.NewClient(cfg.Key, cfg.Interval)
+}
+
+func newCachedIpGeoQuerier(db *model.Database) ipgeo.Querier {
+	return model.NewCachedIpGeoQuerier(ipgeo.NewIpapiComQuerier(), db)
 }
