@@ -27,12 +27,12 @@ var providerSet = wire.NewSet(
 	),
 	model.NewDatabase,
 	newAbuseipdbClient,
-	newIpgeoQuerier,
 	dashboard.NewServer,
 	server.NewHandler,
 	server.NewSshServer,
 	server.NewHttpServer,
 	server.NewFtpServer,
+	ipgeo.NewIpapiComQuerier,
 )
 
 // to suppress "unused" error
@@ -43,8 +43,4 @@ func newAbuseipdbClient(cfg config.Abuseipdb) *abuseipdb.Client {
 		return nil
 	}
 	return abuseipdb.NewClient(cfg.Key, cfg.Interval)
-}
-
-func newIpgeoQuerier(cfg config.Ipgeo) (ipgeo.Querier, error) {
-	return ipgeo.NewMaxmindQuerier(cfg.File)
 }

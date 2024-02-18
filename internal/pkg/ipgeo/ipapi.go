@@ -17,7 +17,7 @@ type IpapiComQuerier struct{}
 
 var _ Querier = (*IpapiComQuerier)(nil)
 
-func NewIpapiComQuerier() *IpapiComQuerier {
+func NewIpapiComQuerier() Querier {
 	return &IpapiComQuerier{}
 }
 
