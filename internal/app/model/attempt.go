@@ -109,12 +109,15 @@ func (db *Database) IncrBruteAttempt(
 	})
 }
 
-func (db *Database) FindBruteAttempt(ctx context.Context, updatedAfter time.Time) ([]*BruteAttempt, error) {
+func (db *Database) FindBruteAttempt(ctx context.Context, updatedAfter time.Time, limit int) ([]*BruteAttempt, error) {
 	sess := db.db.
 		WithContext(ctx).
 		Order("updated_at")
 	if !updatedAfter.IsZero() {
 		sess = sess.Where("updated_at > ?", updatedAfter)
+	}
+	if limit > 0 {
+		sess = sess.Limit(limit)
 	}
 
 	var ret []*BruteAttempt

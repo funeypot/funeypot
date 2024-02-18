@@ -17,7 +17,6 @@ type Config struct {
 	Ssh       Ssh       `yaml:"ssh"`
 	Http      Http      `yaml:"http"`
 	Ftp       Ftp       `yaml:"ftp"`
-	Ipgeo     Ipgeo     `yaml:"ipgeo"`
 	Database  Database  `yaml:"database"`
 	Dashboard Dashboard `yaml:"dashboard"`
 	Abuseipdb Abuseipdb `yaml:"abuseipdb"`
@@ -95,17 +94,6 @@ func (d Database) Validate() error {
 
 	if d.Dsn == "" {
 		return fmt.Errorf("dsn is required")
-	}
-	return nil
-}
-
-type Ipgeo struct {
-	File string `yaml:"file"`
-}
-
-func (i Ipgeo) Validate() error {
-	if i.File == "" {
-		return fmt.Errorf("file is required")
 	}
 	return nil
 }
@@ -189,9 +177,6 @@ func (c *Config) Validate() error {
 	}
 	if err := c.Ftp.Validate(); err != nil {
 		return fmt.Errorf("ftp: %w", err)
-	}
-	if err := c.Ipgeo.Validate(); err != nil {
-		return fmt.Errorf("ipgeo: %w", err)
 	}
 	if err := c.Database.Validate(); err != nil {
 		return fmt.Errorf("database: %w", err)

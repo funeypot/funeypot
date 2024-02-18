@@ -23,11 +23,7 @@ func NewEntrypoint(ctx context.Context, cfg *config.Config) (*Entrypoint, error)
 	if err != nil {
 		return nil, err
 	}
-	ipgeo := cfg.Ipgeo
-	querier, err := newIpgeoQuerier(ipgeo)
-	if err != nil {
-		return nil, err
-	}
+	querier := newCachedIpGeoQuerier(modelDatabase)
 	abuseipdb := cfg.Abuseipdb
 	client := newAbuseipdbClient(abuseipdb)
 	handler := server.NewHandler(ctx, modelDatabase, querier, client)
