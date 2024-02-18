@@ -101,11 +101,11 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 	afterI, _ := strconv.ParseInt(afterQ, 10, 64)
 	after := time.Unix(afterI, 0)
 	if afterI == 0 {
-		after = time.Now().AddDate(0, 0, -30)
+		after = time.Now().AddDate(0, 0, -30) // TODO: make default range configurable
 	}
 
 	next := after
-	attempts, err := s.db.FindBruteAttempt(ctx, after)
+	attempts, err := s.db.FindBruteAttempt(ctx, after, 100) // TODO: make limit configurable
 	if err != nil {
 		logger.Errorf("find ssh attempt: %v", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
