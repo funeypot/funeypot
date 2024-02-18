@@ -13,7 +13,7 @@ import (
 	"github.com/google/wire"
 )
 
-//go:generate go run github.com/google/wire/cmd/wire gen
+//go:generate go run -mod=mod github.com/google/wire/cmd/wire
 
 func NewEntrypoint(ctx context.Context, cfg *config.Config) (*Entrypoint, error) {
 	panic(wire.Build(providerSet))
