@@ -1,10 +1,12 @@
 FROM golang:1.22 as builder
 
+ARG VERSION=unknown
+
 WORKDIR /app
 
 COPY . .
 
-RUN CGO_ENABLED=0 go build -v -buildvcs=false -o funeypot .
+RUN CGO_ENABLED=0 go build -v -buildvcs=false -ldflags="-s -w -X main.Version=${VERSION}" -o funeypot
 
 FROM alpine:3.19
 
