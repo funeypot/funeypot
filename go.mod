@@ -1,4 +1,4 @@
-module github.com/wolfogre/funeypot
+module github.com/funeypot/funeypot
 
 go 1.21.6
 

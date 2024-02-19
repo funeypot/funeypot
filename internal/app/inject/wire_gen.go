@@ -8,10 +8,10 @@ package inject
 
 import (
 	"context"
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/dashboard"
-	"github.com/wolfogre/funeypot/internal/app/model"
-	"github.com/wolfogre/funeypot/internal/app/server"
+	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/dashboard"
+	"github.com/funeypot/funeypot/internal/app/model"
+	"github.com/funeypot/funeypot/internal/app/server"
 )
 
 // Injectors from wire.go:

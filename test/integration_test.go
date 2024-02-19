@@ -12,9 +12,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/inject"
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/inject"
+	"github.com/funeypot/funeypot/internal/pkg/logs"
 )
 
 func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() {

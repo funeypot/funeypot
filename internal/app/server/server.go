@@ -8,10 +8,10 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/wolfogre/funeypot/internal/app/model"
-	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
-	"github.com/wolfogre/funeypot/internal/pkg/ipgeo"
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/funeypot/funeypot/internal/app/model"
+	"github.com/funeypot/funeypot/internal/pkg/abuseipdb"
+	"github.com/funeypot/funeypot/internal/pkg/ipgeo"
+	"github.com/funeypot/funeypot/internal/pkg/logs"
 )
 
 type Server interface {

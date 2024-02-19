@@ -10,7 +10,7 @@ import (
 	"net"
 	"time"
 
-	"github.com/wolfogre/funeypot/internal/pkg/ipgeo"
+	"github.com/funeypot/funeypot/internal/pkg/ipgeo"
 
 	"gorm.io/gorm"
 )

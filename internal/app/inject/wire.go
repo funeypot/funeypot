@@ -8,7 +8,7 @@ package inject
 import (
 	"context"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/config"
 
 	"github.com/google/wire"
 )

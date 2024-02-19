@@ -11,10 +11,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/dashboard"
-	"github.com/wolfogre/funeypot/internal/app/model"
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/dashboard"
+	"github.com/funeypot/funeypot/internal/app/model"
+	"github.com/funeypot/funeypot/internal/pkg/logs"
 
 	"github.com/google/uuid"
 )

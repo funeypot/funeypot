@@ -6,7 +6,7 @@ package ipgeo
 import (
 	"context"
 
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/funeypot/funeypot/internal/pkg/logs"
 )
 
 type CachedQuerier struct {
