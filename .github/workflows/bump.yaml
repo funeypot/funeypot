@@ -2,7 +2,7 @@ name: Bump
 
 on:
   schedule:
-    - cron:  '0 2 * * *'
+    - cron:  '0 0 * * *'
 
 jobs:
   bump-go:
@@ -25,4 +25,22 @@ jobs:
           title: 'Bump go'
           body: 'Bump go to latest version'
           branch: 'bump/go'
+          delete-branch: true
+
+  bump-ssh:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Update ssh.txt
+        run: |
+          cd internal/pkg/fakever
+          ./update.sh
+      - name: Create PR
+        uses: peter-evans/create-pull-request@v6
+        with:
+          commit-message: Bump ssh to latest version
+          title: 'Bump ssh'
+          body: 'Bump ssh to latest version'
+          branch: 'bump/ssh'
           delete-branch: true
