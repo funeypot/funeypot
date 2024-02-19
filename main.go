@@ -10,9 +10,9 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/inject"
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/inject"
+	"github.com/funeypot/funeypot/internal/pkg/logs"
 )
 
 var (

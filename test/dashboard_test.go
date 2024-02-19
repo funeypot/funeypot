@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/config"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

@@ -6,9 +6,9 @@ package inject
 import (
 	"context"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/server"
-	"github.com/wolfogre/funeypot/internal/pkg/logs"
+	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/server"
+	"github.com/funeypot/funeypot/internal/pkg/logs"
 )
 
 type Entrypoint struct {

@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wolfogre/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/config"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/jlaffaye/ftp"

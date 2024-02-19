@@ -4,12 +4,12 @@
 package inject
 
 import (
-	"github.com/wolfogre/funeypot/internal/app/config"
-	"github.com/wolfogre/funeypot/internal/app/dashboard"
-	"github.com/wolfogre/funeypot/internal/app/model"
-	"github.com/wolfogre/funeypot/internal/app/server"
-	"github.com/wolfogre/funeypot/internal/pkg/abuseipdb"
-	"github.com/wolfogre/funeypot/internal/pkg/ipgeo"
+	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/app/dashboard"
+	"github.com/funeypot/funeypot/internal/app/model"
+	"github.com/funeypot/funeypot/internal/app/server"
+	"github.com/funeypot/funeypot/internal/pkg/abuseipdb"
+	"github.com/funeypot/funeypot/internal/pkg/ipgeo"
 
 	"github.com/google/wire"
 )
