@@ -20,4 +20,5 @@ You can easily deploy it as a trap for attackers, and it will protect your real 
 > This project is currently under development.
 > More comprehensive instructions and details will be provided later.
 
+TODO: more details.
 
