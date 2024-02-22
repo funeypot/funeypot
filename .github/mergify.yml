@@ -1,7 +1,9 @@
 pull_request_rules:
   - name: Automatic merge
     conditions:
-      - 'author=dependabot[bot]'
+      - or:
+          - 'author=dependabot[bot]'
+          - 'author=more-bump[bot]'
       - -draft
       - -merged
       - -closed
