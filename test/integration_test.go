@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/funeypot/funeypot/internal/app/config"
-	"github.com/funeypot/funeypot/internal/app/inject"
+	"github.com/funeypot/funeypot/internal/app/entry"
 	"github.com/funeypot/funeypot/internal/pkg/logs"
 )
 
@@ -38,7 +38,7 @@ func PrepareServers(t *testing.T, modifyConfig func(cfg *config.Config)) func() 
 
 	logs.SetLevel(cfg.Log.Level)
 
-	entrypoint, err := inject.NewEntrypoint(ctx, cfg)
+	entrypoint, err := entry.NewEntrypoint(ctx, cfg)
 	if err != nil {
 		cancel()
 		t.Fatalf("new entrypoint: %v", err)
