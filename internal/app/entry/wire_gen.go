@@ -4,7 +4,7 @@
 //go:build !wireinject
 // +build !wireinject
 
-package inject
+package entry
 
 import (
 	"context"

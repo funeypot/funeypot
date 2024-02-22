@@ -3,7 +3,7 @@
 
 //go:build wireinject
 
-package inject
+package entry
 
 import (
 	"context"
