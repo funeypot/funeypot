@@ -29,16 +29,19 @@ jobs:
         with:
           go-version: stable
       - name: Update go.mod
+        id: update-go
         run: |
-          go mod edit -go=$(go version | awk '{print $3}' | cut -c 3-)
+          GO_VERSION=$(go version | awk '{print $3}' | cut -c 3-)
+          echo "GO_VERSION=$GO_VERSION" | tee -a $GITHUB_ENV
+          go mod edit -go=$GO_VERSION
           go mod tidy
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ steps.generate-token.outputs.token }}
-          commit-message: Bump go to latest version
-          title: 'Bump go'
-          body: 'Bump go to latest version'
+          token: '${{ steps.generate-token.outputs.token }}'
+          commit-message: 'Bump go to ${{ steps.update-go.outputs.GO_VERSION }}'
+          title: 'Bump go to ${{ steps.update-go.outputs.GO_VERSION }}'
+          body: 'Bump go to ${{ steps.update-go.outputs.GO_VERSION }}'
           branch: 'bump/go'
           delete-branch: true
           author: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
@@ -55,16 +58,19 @@ jobs:
           app_id: ${{ secrets.MORE_BUMP_APP_ID }}
           private_key: ${{ secrets.MORE_BUMP_APP_PRIVATE_KEY }}
       - name: Update ssh.txt
+        id: update-ssh
         run: |
           cd internal/pkg/fakever
           ./update.sh
+          SSH_VERSION=$(cat ssh.txt)
+          echo "SSH_VERSION=$SSH_VERSION" | tee -a $GITHUB_ENV
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ steps.generate-token.outputs.token }}
-          commit-message: Bump ssh to latest version
-          title: 'Bump ssh'
-          body: 'Bump ssh to latest version'
+          token: '${{ steps.generate-token.outputs.token }}'
+          commit-message: 'Bump mock ssh to ${{ steps.update-ssh.outputs.SSH_VERSION }}'
+          title: 'Bump mock ssh to ${{ steps.update-ssh.outputs.SSH_VERSION }}'
+          body: 'Bump mock ssh to ${{ steps.update-ssh.outputs.SSH_VERSION }}'
           branch: 'bump/ssh'
           delete-branch: true
           author: 'github-actions[bot] <41898282+github-actions[bot]@users.noreply.github.com>'
