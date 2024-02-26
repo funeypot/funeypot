@@ -3,6 +3,7 @@
 /config.yaml
 /funeypot.db
 /coverage.out
+/dist/
 
 # Created by https://www.toptal.com/developers/gitignore/api/go,intellij,visualstudiocode,vim,macos
 # Edit at https://www.toptal.com/developers/gitignore?templates=go,intellij,visualstudiocode,vim,macos
