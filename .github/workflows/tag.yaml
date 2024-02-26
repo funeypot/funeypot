@@ -12,19 +12,24 @@ on:
 
 jobs:
   release:
-    name: promote
+    name: tag
     runs-on: ubuntu-latest
     steps:
+      - name: Generate token
+        uses: tibdex/github-app-token@v2
+        id: generate-token
+        with:
+          app_id: ${{ secrets.MORE_BUMP_APP_ID }}
+          private_key: ${{ secrets.MORE_BUMP_APP_PRIVATE_KEY }}
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
+          token: ${{ steps.generate-token.outputs.token }}
       - name: Set up git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
       - name: New tag
         # Follow calver YY.MM.DD, see https://calver.org/
         run: |
