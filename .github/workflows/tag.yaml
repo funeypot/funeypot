@@ -1,0 +1,31 @@
+name: Tag
+on:
+  schedule:
+    - cron: '0 2 1 * *'
+  workflow_dispatch: {}
+
+jobs:
+  release:
+    name: promote
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: New tag
+        # Follow calver YY.MM.DD, see https://calver.org/
+        run: |
+          if [[ -n $(git tag --contains) ]]; then
+              echo "Already tagged"
+              exit 0
+          fi
+          VERSION="v$(date +%y).$(date +%-m).$(date +%-d)"
+          git tag -a "$VERSION" -m "Release $VERSION"
+          git push origin "$VERSION"
