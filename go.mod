@@ -3,7 +3,7 @@ module github.com/funeypot/funeypot
 go 1.22.0
 
 require (
-	github.com/fclairamb/ftpserverlib v0.22.0
+	github.com/fclairamb/ftpserverlib v0.23.0
 	github.com/glebarez/sqlite v1.10.0
 	github.com/gliderlabs/ssh v0.3.6
 	github.com/go-resty/resty/v2 v2.11.0
@@ -38,7 +38,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
-	github.com/spf13/afero v1.9.5 // indirect
+	github.com/spf13/afero v1.11.0 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
