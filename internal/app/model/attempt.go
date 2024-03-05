@@ -109,21 +109,6 @@ func (db *Database) IncrBruteAttempt(
 	})
 }
 
-func (db *Database) FindBruteAttempt(ctx context.Context, updatedAfter time.Time, limit int) ([]*BruteAttempt, error) {
-	sess := db.db.
-		WithContext(ctx).
-		Order("updated_at")
-	if !updatedAfter.IsZero() {
-		sess = sess.Where("updated_at > ?", updatedAfter)
-	}
-	if limit > 0 {
-		sess = sess.Limit(limit)
-	}
-
-	var ret []*BruteAttempt
-	return ret, sess.Find(&ret).Error
-}
-
 func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time, f func(attempt *BruteAttempt, geo *IpGeo) bool) error {
 	rows, err := db.db.
 		WithContext(ctx).
