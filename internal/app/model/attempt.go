@@ -109,17 +109,31 @@ func (db *Database) IncrBruteAttempt(
 	})
 }
 
-func (db *Database) FindBruteAttempt(ctx context.Context, updatedAfter time.Time, limit int) ([]*BruteAttempt, error) {
-	sess := db.db.
+func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time, f func(attempt *BruteAttempt, geo *IpGeo) bool) error {
+	rows, err := db.db.
 		WithContext(ctx).
-		Order("updated_at")
-	if !updatedAfter.IsZero() {
-		sess = sess.Where("updated_at > ?", updatedAfter)
+		Model(&BruteAttempt{}).
+		Select("brute_attempts.*, ip_geos.*").
+		Joins("LEFT JOIN ip_geos ON brute_attempts.ip = ip_geos.ip").
+		Where("brute_attempts.updated_at > ?", updatedAfter).
+		Order("brute_attempts.updated_at").
+		Rows()
+	if err != nil {
+		return err
 	}
-	if limit > 0 {
-		sess = sess.Limit(limit)
-	}
+	defer rows.Close()
 
-	var ret []*BruteAttempt
-	return ret, sess.Find(&ret).Error
+	for rows.Next() {
+		result := &struct {
+			*BruteAttempt
+			*IpGeo
+		}{}
+		if err := db.db.ScanRows(rows, result); err != nil {
+			return err
+		}
+		if !f(result.BruteAttempt, result.IpGeo) {
+			break
+		}
+	}
+	return nil
 }
