@@ -28,7 +28,7 @@ func TestFtpServer(t *testing.T) {
 		defer client.Quit() // nolint:errcheck
 
 		err = client.Login("anonymous", "anonymous")
-		require.ErrorContains(t, err, "530 Authentication problem: invalid user or password")
+		require.ErrorContains(t, err, "530 Authentication error: invalid user or password")
 	})
 
 	t.Run("auth", func(t *testing.T) {
@@ -37,7 +37,7 @@ func TestFtpServer(t *testing.T) {
 		defer client.Quit() // nolint:errcheck
 
 		err = client.Login("username", "password")
-		require.ErrorContains(t, err, "530 Authentication problem: invalid user or password")
+		require.ErrorContains(t, err, "530 Authentication error: invalid user or password")
 	})
 }
 
