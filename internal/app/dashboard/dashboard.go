@@ -42,6 +42,7 @@ func NewServer(cfg config.Dashboard, db *model.Database, ipgeoQuerier ipgeo.Quer
 		ipgeoQuerier: ipgeoQuerier,
 	}
 
+	gin.SetMode(gin.ReleaseMode)
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 	engine.ContextWithFallback = true
