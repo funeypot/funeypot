@@ -123,3 +123,32 @@ func (db *Database) FindBruteAttempt(ctx context.Context, updatedAfter time.Time
 	var ret []*BruteAttempt
 	return ret, sess.Find(&ret).Error
 }
+
+func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time, f func(attempt *BruteAttempt, geo *IpGeo) bool) error {
+	rows, err := db.db.
+		WithContext(ctx).
+		Model(&BruteAttempt{}).
+		Select("brute_attempts.*, ip_geos.*").
+		Joins("LEFT JOIN ip_geos ON brute_attempts.ip = ip_geos.ip").
+		Where("brute_attempts.updated_at > ?", updatedAfter).
+		Order("brute_attempts.updated_at").
+		Rows()
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		result := &struct {
+			*BruteAttempt
+			*IpGeo
+		}{}
+		if err := db.db.ScanRows(rows, result); err != nil {
+			return err
+		}
+		if !f(result.BruteAttempt, result.IpGeo) {
+			break
+		}
+	}
+	return nil
+}

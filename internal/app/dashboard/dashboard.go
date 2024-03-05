@@ -104,37 +104,34 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 		after = time.Now().AddDate(0, 0, -30) // TODO: make default range configurable
 	}
 
+	pointM := map[string]struct{}{}
+	var points []*responsePoint
 	next := after
-	attempts, err := s.db.FindBruteAttempt(ctx, after, 100) // TODO: make limit configurable
-	if err != nil {
-		logger.Errorf("find ssh attempt: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	points := make([]*responsePoint, 0, len(attempts))
-	pointM := make(map[string]struct{}, len(attempts))
-
-	for _, attempt := range attempts {
+	if err := s.db.ScanBruteAttempt(ctx, after, func(attempt *model.BruteAttempt, geo *model.IpGeo) bool {
 		if _, ok := pointM[attempt.Ip]; ok {
-			continue
+			return true
 		}
 		pointM[attempt.Ip] = struct{}{}
-		geo, err := s.ipgeoQuerier.Query(ctx, attempt.Ip)
-		if err != nil {
-			logger.Errorf("query geo: %v", err)
-			continue
+		if geo == nil {
+			// ignore attempts from unknown ip location
+			return true
 		}
-		points = append(points, &responsePoint{
+		point := &responsePoint{
 			Ip:          attempt.Ip,
 			Count:       attempt.Count,
 			Latitude:    geo.Latitude,
 			Longitude:   geo.Longitude,
 			ActivatedAt: attempt.StoppedAt,
-		})
+		}
+		points = append(points, point)
 		if attempt.UpdatedAt.After(next) {
 			next = attempt.UpdatedAt
 		}
+		return true
+	}); err != nil {
+		logger.Errorf("scan ssh attempt: %v", err)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
 	if err := json.NewEncoder(w).Encode(&responseGetPoints{
