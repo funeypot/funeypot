@@ -27,7 +27,7 @@ class Map {
             .style("top", 0)
             .style("left", 0);
 
-        fetch("logo.svg")
+        fetch("/static/logo.svg")
             .then(response => response.text())
             .then(data => {
                 const parser = new DOMParser();

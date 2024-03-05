@@ -6,7 +6,6 @@ package dashboard
 import (
 	"crypto/subtle"
 	"embed"
-	"encoding/json"
 	"io/fs"
 	"net/http"
 	"strconv"
@@ -17,6 +16,8 @@ import (
 	"github.com/funeypot/funeypot/internal/pkg/ipgeo"
 	"github.com/funeypot/funeypot/internal/pkg/logs"
 	"github.com/funeypot/funeypot/internal/pkg/selfip"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
@@ -26,7 +27,7 @@ type Server struct {
 	db           *model.Database
 	ipgeoQuerier ipgeo.Querier
 
-	static http.Handler
+	engine *gin.Engine
 }
 
 func NewServer(cfg config.Dashboard, db *model.Database, ipgeoQuerier ipgeo.Querier) (*Server, error) {
@@ -34,17 +35,32 @@ func NewServer(cfg config.Dashboard, db *model.Database, ipgeoQuerier ipgeo.Quer
 		return nil, nil
 	}
 
-	s, err := fs.Sub(static, "static")
-	if err != nil {
-		return nil, err
-	}
-	return &Server{
+	server := &Server{
 		username:     cfg.Username,
 		password:     cfg.Password,
 		db:           db,
 		ipgeoQuerier: ipgeoQuerier,
-		static:       http.FileServer(http.FS(s)),
-	}, nil
+	}
+
+	engine := gin.New()
+	engine.Use(gin.Recovery())
+	engine.ContextWithFallback = true
+
+	apiGroup := engine.Group("/api/v1")
+	apiGroup.GET("/points", server.handleGetPoints)
+	apiGroup.GET("/self", server.handleGetSelf)
+
+	staticFs, err := fs.Sub(static, "static")
+	if err != nil {
+		return nil, err
+	}
+	httpFs := http.FS(staticFs)
+	engine.StaticFileFS("/", "/", httpFs)
+	engine.StaticFS("/static", httpFs)
+
+	server.engine = engine
+
+	return server, nil
 }
 
 func (s *Server) Enabled() bool {
@@ -59,25 +75,8 @@ func (s *Server) Verify(username, password string) bool {
 //go:embed static
 var static embed.FS
 
-func (s *Server) Handle(w http.ResponseWriter, r *http.Request) {
-	switch r.URL.Path {
-	case "/api/v1/points":
-		switch r.Method {
-		case http.MethodGet:
-			s.handleGetPoints(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	case "/api/v1/self":
-		switch r.Method {
-		case http.MethodGet:
-			s.handleGetSelf(w, r)
-		default:
-			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
-		}
-	default:
-		s.static.ServeHTTP(w, r)
-	}
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	s.engine.ServeHTTP(w, r)
 }
 
 type responsePoint struct {
@@ -93,12 +92,10 @@ type responseGetPoints struct {
 	Next   int64            `json:"next"`
 }
 
-func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	logger := logs.From(ctx)
+func (s *Server) handleGetPoints(c *gin.Context) {
+	logger := logs.From(c)
 
-	afterQ := r.URL.Query().Get("after")
-	afterI, _ := strconv.ParseInt(afterQ, 10, 64)
+	afterI, _ := strconv.ParseInt(c.Query("after"), 10, 64)
 	after := time.Unix(afterI, 0)
 	if afterI == 0 {
 		after = time.Now().AddDate(0, 0, -30) // TODO: make default range configurable
@@ -107,7 +104,7 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 	pointM := map[string]struct{}{}
 	var points []*responsePoint
 	next := after
-	if err := s.db.ScanBruteAttempt(ctx, after, func(attempt *model.BruteAttempt, geo *model.IpGeo) bool {
+	if err := s.db.ScanBruteAttempt(c, after, func(attempt *model.BruteAttempt, geo *model.IpGeo) bool {
 		if _, ok := pointM[attempt.Ip]; ok {
 			return true
 		}
@@ -130,18 +127,14 @@ func (s *Server) handleGetPoints(w http.ResponseWriter, r *http.Request) {
 		return true
 	}); err != nil {
 		logger.Errorf("scan ssh attempt: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&responseGetPoints{
+	c.JSON(http.StatusOK, &responseGetPoints{
 		Points: points,
 		Next:   next.Unix(),
-	}); err != nil {
-		logger.Errorf("encode response: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	})
 }
 
 type responseGetSelf struct {
@@ -149,30 +142,25 @@ type responseGetSelf struct {
 	Longitude float64 `json:"longitude"`
 }
 
-func (s *Server) handleGetSelf(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	logger := logs.From(ctx)
+func (s *Server) handleGetSelf(c *gin.Context) {
+	logger := logs.From(c)
 
-	selfIp, err := selfip.Get(ctx)
+	selfIp, err := selfip.Get(c)
 	if err != nil {
 		logger.Errorf("get self ip: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	geo, err := s.ipgeoQuerier.Query(ctx, selfIp)
+	geo, err := s.ipgeoQuerier.Query(c, selfIp)
 	if err != nil {
 		logger.Errorf("query geo: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		_ = c.AbortWithError(http.StatusInternalServerError, err)
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(&responseGetSelf{
+	c.JSON(http.StatusOK, &responseGetSelf{
 		Latitude:  geo.Latitude,
 		Longitude: geo.Longitude,
-	}); err != nil {
-		logger.Errorf("encode response: %v", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	})
 }
