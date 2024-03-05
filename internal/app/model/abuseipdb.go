@@ -27,8 +27,7 @@ type AbuseipdbReport struct {
 
 func (db *Database) LastAbuseipdbReport(ctx context.Context, ip string) (*AbuseipdbReport, bool, error) {
 	report := &AbuseipdbReport{}
-	result := db.db.
-		WithContext(ctx).
+	result := db.withContext(ctx).
 		Last(&report, "ip = ?", ip)
 	if err := result.Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, false, nil

@@ -76,10 +76,9 @@ func (db *Database) IncrBruteAttempt(
 	after time.Time,
 ) (*BruteAttempt, error) {
 	attempt := &BruteAttempt{}
-	return attempt, db.db.Transaction(func(tx *gorm.DB) error {
+	return attempt, db.withContext(ctx).Transaction(func(tx *gorm.DB) error {
 		tx = tx.Clauses(clause.Locking{Strength: "UPDATE"})
 		result := tx.
-			WithContext(ctx).
 			Where("ip = ? AND kind = ?", ip, kind).
 			Last(attempt)
 		if err := result.Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -110,8 +109,8 @@ func (db *Database) IncrBruteAttempt(
 }
 
 func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time, f func(attempt *BruteAttempt, geo *IpGeo) bool) error {
-	rows, err := db.db.
-		WithContext(ctx).
+	sess := db.withContext(ctx)
+	rows, err := sess.
 		Model(&BruteAttempt{}).
 		Select("brute_attempts.*, ip_geos.*").
 		Joins("LEFT JOIN ip_geos ON brute_attempts.ip = ip_geos.ip").
@@ -128,7 +127,7 @@ func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time
 			*BruteAttempt
 			*IpGeo
 		}{}
-		if err := db.db.ScanRows(rows, result); err != nil {
+		if err := sess.ScanRows(rows, result); err != nil {
 			return err
 		}
 		if !f(result.BruteAttempt, result.IpGeo) {
