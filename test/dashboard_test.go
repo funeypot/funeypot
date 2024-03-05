@@ -52,7 +52,7 @@ func TestDashboard(t *testing.T) {
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
-			assert.Equal(t, 405, resp.StatusCode)
+			assert.Equal(t, 404, resp.StatusCode)
 		})
 		t.Run("/api/v1/points", func(t *testing.T) {
 			req, err := http.NewRequest("POST", "http://127.0.0.1:8080/api/v1/points", nil)
@@ -61,7 +61,7 @@ func TestDashboard(t *testing.T) {
 
 			resp, err := http.DefaultClient.Do(req)
 			require.NoError(t, err)
-			assert.Equal(t, 405, resp.StatusCode)
+			assert.Equal(t, 404, resp.StatusCode)
 		})
 	})
 
