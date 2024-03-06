@@ -77,8 +77,8 @@ func (db *Database) IncrBruteAttempt(
 ) (*BruteAttempt, error) {
 	attempt := &BruteAttempt{}
 	return attempt, db.withContext(ctx).Transaction(func(tx *gorm.DB) error {
-		tx = tx.Clauses(clause.Locking{Strength: "UPDATE"})
 		result := tx.
+			Clauses(clause.Locking{Strength: "UPDATE"}).
 			Where("ip = ? AND kind = ?", ip, kind).
 			Last(attempt)
 		if err := result.Error; err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
