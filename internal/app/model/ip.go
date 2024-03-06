@@ -54,8 +54,7 @@ func (m *IpGeo) BeforeSave(_ *gorm.DB) error {
 
 func (db *Database) TakeIpGeo(ctx context.Context, ip string) (*IpGeo, bool, error) {
 	geo := &IpGeo{}
-	result := db.db.
-		WithContext(ctx).
+	result := db.withContext(ctx).
 		Take(&geo, "ip = ?", ip)
 	if err := result.Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, false, nil
