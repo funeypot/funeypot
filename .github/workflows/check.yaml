@@ -17,6 +17,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
+      - name: Lint
+        uses: golangci/golangci-lint-action@v4
+        with:
+          version: latest
       - name: Tidy
         run: |
           go mod tidy
@@ -31,10 +35,6 @@ jobs:
           git add --all && git diff --name-only --exit-code HEAD
       - name: Vet
         run: go vet -v ./...
-      - name: Lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
       - name: Build
         run: go build -v ./...
 
