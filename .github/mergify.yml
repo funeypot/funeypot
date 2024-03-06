@@ -4,6 +4,7 @@ pull_request_rules:
       - or:
           - 'author=dependabot[bot]'
           - 'author=more-bump[bot]'
+          - 'label=wait-merge'
       - -draft
       - -merged
       - -closed
@@ -15,7 +16,15 @@ pull_request_rules:
       queue:
         method: squash
         name: default
-
+  - name: Handle merged
+    conditions:
+      - 'label=wait-merge'
+      - or:
+          - merged
+          - closed
+    actions:
+      label:
+        remove: ["wait-merge"]
 queue_rules:
   - name: default
     conditions:
