@@ -53,7 +53,7 @@ func TestGet(t *testing.T) {
 		transport := http.DefaultTransport
 		http.DefaultTransport = &http.Transport{
 			DialContext: (&net.Dialer{
-				Timeout: 1 * time.Millisecond,
+				Timeout: 1 * time.Nanosecond,
 			}).DialContext,
 		}
 		defer func() {
