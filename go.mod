@@ -1,6 +1,6 @@
 module github.com/funeypot/funeypot
 
-go 1.22.1
+go 1.22.0
 
 require (
 	github.com/fclairamb/ftpserverlib v0.23.0
