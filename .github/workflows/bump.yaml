@@ -32,7 +32,7 @@ jobs:
         id: update-go
         run: |
           GO_VERSION=$(go version | awk '{print $3}' | cut -c 3-)
-          echo "GO_VERSION=$GO_VERSION" | tee -a $GITHUB_ENV
+          echo "GO_VERSION=$GO_VERSION" | tee -a $GITHUB_OUTPUT
           go mod edit -go=$GO_VERSION
           go mod tidy
       - name: Create PR
@@ -63,7 +63,7 @@ jobs:
           cd internal/pkg/fakever
           ./update.sh
           SSH_VERSION=$(cat ssh.txt)
-          echo "SSH_VERSION=$SSH_VERSION" | tee -a $GITHUB_ENV
+          echo "SSH_VERSION=$SSH_VERSION" | tee -a $GITHUB_OUTPUT
       - name: Create PR
         uses: peter-evans/create-pull-request@v6
         with:
