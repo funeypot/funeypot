@@ -3,7 +3,7 @@ module github.com/funeypot/funeypot
 go 1.22.1
 
 require (
-	github.com/fclairamb/ftpserverlib v0.23.0
+	github.com/fclairamb/ftpserverlib v0.24.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/glebarez/sqlite v1.10.0
 	github.com/gliderlabs/ssh v0.3.6
@@ -27,7 +27,7 @@ require (
 	github.com/chenzhuoyu/base64x v0.0.0-20221115062448-fe3a3abad311 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
-	github.com/fclairamb/go-log v0.4.1 // indirect
+	github.com/fclairamb/go-log v0.5.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/glebarez/go-sqlite v1.21.2 // indirect
