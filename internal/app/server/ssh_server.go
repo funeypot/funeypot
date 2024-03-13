@@ -51,9 +51,6 @@ func NewSshServer(cfg config.Ssh, handler *Handler) (*SshServer, error) {
 			return false
 		},
 		PasswordHandler: ret.handlePassword,
-		ConnectionFailedCallback: func(conn net.Conn, reason error) {
-			logs.Default().Infof("connection %s failed: %v", conn.RemoteAddr(), reason)
-		},
 	}
 
 	return ret, nil
