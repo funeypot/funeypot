@@ -140,6 +140,10 @@ func (h *Handler) reportAttempt(ctx context.Context, attempt *model.BruteAttempt
 	if attempt.Count < 5 {
 		return
 	}
+	if until, ok := h.abuseipdbClient.Cooldown(); ok {
+		logger.Debugf("abuseipdb cooldown, until: %v", until.Format(time.RFC3339))
+		return
+	}
 	report, ok, err := h.db.LastAbuseipdbReport(ctx, attempt.Ip)
 	if err != nil {
 		logger.Errorf("get last report: %v", err)
