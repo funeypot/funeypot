@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/funeypot/funeypot/internal/app/config"
+	"github.com/funeypot/funeypot/internal/pkg/abuseipdb"
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
@@ -60,7 +61,7 @@ func TestHttpServer_Report(t *testing.T) {
 
 	t.Run("first", func(t *testing.T) {
 		defer httpmock.Reset()
-		httpmock.RegisterResponder("POST", "https://api.abuseipdb.com/api/v2/report",
+		httpmock.RegisterResponder("POST", abuseipdb.ReportUrl,
 			func(request *http.Request) (*http.Response, error) {
 				assert.Equal(t, "test_key", request.Header.Get("Key"))
 				assert.Equal(t, "application/x-www-form-urlencoded", request.Header.Get("Content-Type"))
@@ -88,7 +89,7 @@ func TestHttpServer_Report(t *testing.T) {
 
 	t.Run("continue", func(t *testing.T) {
 		defer httpmock.Reset()
-		httpmock.RegisterResponder("POST", "https://api.abuseipdb.com/api/v2/report",
+		httpmock.RegisterResponder("POST", abuseipdb.ReportUrl,
 			func(request *http.Request) (*http.Response, error) {
 				assert.Equal(t, "test_key", request.Header.Get("Key"))
 				assert.Equal(t, "application/x-www-form-urlencoded", request.Header.Get("Content-Type"))
