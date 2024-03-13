@@ -86,6 +86,7 @@ func (c *Client) Report(ctx context.Context, ip string, categories []string, tim
 	}
 
 	if resp.StatusCode() == http.StatusTooManyRequests {
+		// see: https://docs.abuseipdb.com/#api-daily-rate-limits
 		const headerKey = "Retry-After"
 		header := resp.Header().Get(headerKey)
 		retryAfter, err := strconv.ParseInt(header, 10, 60)
