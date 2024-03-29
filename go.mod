@@ -5,9 +5,9 @@ go 1.22.1
 require (
 	github.com/fclairamb/ftpserverlib v0.24.0
 	github.com/gin-gonic/gin v1.9.1
-	github.com/glebarez/sqlite v1.10.0
-	github.com/gliderlabs/ssh v0.3.6
-	github.com/go-resty/resty/v2 v2.11.0
+	github.com/glebarez/sqlite v1.11.0
+	github.com/gliderlabs/ssh v0.3.7
+	github.com/go-resty/resty/v2 v2.12.0
 	github.com/gochore/pt v1.3.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
@@ -19,7 +19,7 @@ require (
 	golang.org/x/tools v0.19.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.5.7
-	gorm.io/gorm v1.25.7
+	gorm.io/gorm v1.25.9
 )
 
 require (
@@ -41,7 +41,8 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20221227161230-091c0ba34f0a // indirect
-	github.com/jackc/pgx/v5 v5.4.3 // indirect
+	github.com/jackc/pgx/v5 v5.5.4 // indirect
+	github.com/jackc/puddle/v2 v2.2.1 // indirect
 	github.com/jinzhu/inflection v1.0.0 // indirect
 	github.com/jinzhu/now v1.1.5 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -61,9 +62,10 @@ require (
 	golang.org/x/arch v0.3.0 // indirect
 	golang.org/x/mod v0.16.0 // indirect
 	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
+	google.golang.org/protobuf v1.33.0 // indirect
 	modernc.org/libc v1.29.0 // indirect
 	modernc.org/mathutil v1.6.0 // indirect
 	modernc.org/memory v1.7.2 // indirect
