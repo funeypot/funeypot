@@ -1,1 +1,1 @@
-OpenSSH_9.7
+OpenSSH_9.8
