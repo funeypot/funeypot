@@ -36,7 +36,7 @@ jobs:
           go mod edit -go=$GO_VERSION
           go mod tidy
       - name: Create PR
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: '${{ steps.generate-token.outputs.token }}'
           commit-message: 'Bump go to ${{ steps.update-go.outputs.GO_VERSION }}'
@@ -65,7 +65,7 @@ jobs:
           SSH_VERSION=$(cat ssh.txt)
           echo "SSH_VERSION=$SSH_VERSION" | tee -a $GITHUB_OUTPUT
       - name: Create PR
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v7
         with:
           token: '${{ steps.generate-token.outputs.token }}'
           commit-message: 'Bump mock ssh to ${{ steps.update-ssh.outputs.SSH_VERSION }}'
