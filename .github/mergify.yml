@@ -1,6 +1,21 @@
+
 pull_request_rules:
-  - name: Automatic merge
+  - name: Handle merged
     conditions:
+      - 'label=wait-merge'
+      - or:
+          - merged
+          - closed
+    actions:
+      label:
+        remove: ["wait-merge"]
+  - name: refactored queue action rule
+    conditions: []
+    actions:
+      queue:
+queue_rules:
+  - name: default
+    queue_conditions:
       - or:
           - 'author=dependabot[bot]'
           - 'author=more-bump[bot]'
@@ -12,23 +27,9 @@ pull_request_rules:
       - check-success=test
       - check-success=codecov/patch
       - check-success=codecov/project
-    actions:
-      queue:
-        method: squash
-        name: default
-  - name: Handle merged
-    conditions:
-      - 'label=wait-merge'
-      - or:
-          - merged
-          - closed
-    actions:
-      label:
-        remove: ["wait-merge"]
-queue_rules:
-  - name: default
-    conditions:
+    merge_conditions:
       - check-success=build
       - check-success=test
       - check-success=codecov/patch
       - check-success=codecov/project
+    merge_method: squash
