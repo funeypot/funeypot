@@ -6,7 +6,7 @@ require (
 	github.com/fclairamb/ftpserverlib v0.25.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
-	github.com/gliderlabs/ssh v0.3.7
+	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/gochore/pt v1.3.0
 	github.com/google/uuid v1.6.0
@@ -15,7 +15,7 @@ require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
-	golang.org/x/crypto v0.30.0
+	golang.org/x/crypto v0.31.0
 	golang.org/x/tools v0.28.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.5.11
