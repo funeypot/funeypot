@@ -3,10 +3,10 @@ module github.com/funeypot/funeypot
 go 1.23.4
 
 require (
-	github.com/fclairamb/ftpserverlib v0.24.1
+	github.com/fclairamb/ftpserverlib v0.25.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/glebarez/sqlite v1.11.0
-	github.com/gliderlabs/ssh v0.3.7
+	github.com/gliderlabs/ssh v0.3.8
 	github.com/go-resty/resty/v2 v2.16.2
 	github.com/gochore/pt v1.3.0
 	github.com/google/uuid v1.6.0
