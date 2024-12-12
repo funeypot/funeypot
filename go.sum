@@ -13,8 +13,8 @@ github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/dustin/go-humanize v1.0.1 h1:GzkhY7T5VNhEkwH0PVJgjz+fX1rhBrR7pRT3mDkpeCY=
 github.com/dustin/go-humanize v1.0.1/go.mod h1:Mu1zIs6XwVuF/gI1OepvI0qD18qycQx+mFykh5fBlto=
-github.com/fclairamb/ftpserverlib v0.24.1 h1:D+dDP+KibZKI182zQlITMJmaayCyIYpLpprzg8ZhtqA=
-github.com/fclairamb/ftpserverlib v0.24.1/go.mod h1:aAwyOAC6IIe+IZeeGD1QjuE3GGDzqW/c5Xtn+Dp0JUM=
+github.com/fclairamb/ftpserverlib v0.25.0 h1:swV2CK+WiN9KEkqkwNgGbSIfRoYDWNno41hoVtYwgfA=
+github.com/fclairamb/ftpserverlib v0.25.0/go.mod h1:LIDqyiFPhjE9IuzTkntST8Sn8TaU6NRgzSvbMpdfRC4=
 github.com/fclairamb/go-log v0.5.0 h1:Gz9wSamEaA6lta4IU2cjJc2xSq5sV5VYSB5w/SUHhVc=
 github.com/fclairamb/go-log v0.5.0/go.mod h1:XoRO1dYezpsGmLLkZE9I+sHqpqY65p8JA+Vqblb7k40=
 github.com/gabriel-vasile/mimetype v1.4.3 h1:in2uUcidCuFcDKtdcBxlR0rJ1+fsokWf+uqxgUFjbI0=
