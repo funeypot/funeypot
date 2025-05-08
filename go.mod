@@ -11,7 +11,7 @@ require (
 	github.com/gochore/pt v1.3.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.6.0
-	github.com/jarcoal/httpmock v1.3.1
+	github.com/jarcoal/httpmock v1.4.0
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/stretchr/testify v1.10.0
 	go.uber.org/zap v1.27.0
