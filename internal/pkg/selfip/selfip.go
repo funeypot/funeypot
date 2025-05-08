@@ -18,7 +18,7 @@ var (
 		"http://ip-api.com/line/?fields=query",
 		"https://api.ipify.org",
 		"https://icanhazip.com",
-		"https://ifconfig.me",
+		//"https://ifconfig.me",
 		"https://ipinfo.io/ip",
 		"https://ipecho.net/plain",
 		"https://myexternalip.com/raw",
