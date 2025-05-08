@@ -120,7 +120,7 @@ func (db *Database) ScanBruteAttempt(ctx context.Context, updatedAfter time.Time
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer rows.Close() //nolint:errcheck
 
 	for rows.Next() {
 		result := &struct {

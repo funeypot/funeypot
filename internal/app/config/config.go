@@ -150,7 +150,7 @@ func Load(file string, generate bool) (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open file %q: %w", file, err)
 	}
-	defer f.Close()
+	defer f.Close() //nolint:errcheck
 
 	encoder := yaml.NewDecoder(f)
 	ret := &Config{}

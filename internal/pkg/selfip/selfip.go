@@ -51,7 +51,7 @@ func getFrom(ctx context.Context, url string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("get: %w", err)
 	}
-	defer resp.Body.Close()
+	defer resp.Body.Close() //nolint:errcheck
 
 	if resp.StatusCode != http.StatusOK {
 		return "", fmt.Errorf("status: %v", resp.StatusCode)
