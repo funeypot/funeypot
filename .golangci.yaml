@@ -4,6 +4,9 @@ linters:
 
 linters-settings:
   goheader:
+    values:
+      regexp:
+        year: "[0-9]{4}"
     template: |-
-      Copyright {{ YEAR }} The Funeypot Authors. All rights reserved.
+      Copyright {{ year }} The Funeypot Authors. All rights reserved.
       SPDX-License-Identifier: MIT
