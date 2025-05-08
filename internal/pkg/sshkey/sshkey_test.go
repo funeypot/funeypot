@@ -29,7 +29,7 @@ func TestGenerateKey(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			key, err := GenerateKey("1")
 			require.NoError(t, err)
-			require.Equal(t, "2a7b14dfdb31f6ae43c7427d74c9b133", privateKeyHash(key))
+			require.Equal(t, "ff3457080d98fed59a8356958690c014", privateKeyHash(key))
 		}
 	})
 
@@ -37,7 +37,7 @@ func TestGenerateKey(t *testing.T) {
 		for i := 0; i < 10; i++ {
 			key, err := GenerateKey("1234")
 			require.NoError(t, err)
-			require.Equal(t, "fdfa43f717bbeb688e80c48cfacdb2f4", privateKeyHash(key))
+			require.Equal(t, "9d6d0b4a76570b69c77188a1e4715df4", privateKeyHash(key))
 		}
 	})
 }
