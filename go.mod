@@ -13,7 +13,7 @@ require (
 	github.com/google/wire v0.6.0
 	github.com/jarcoal/httpmock v1.4.1
 	github.com/jlaffaye/ftp v0.2.0
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	go.uber.org/zap v1.27.0
 	golang.org/x/crypto v0.41.0
 	golang.org/x/tools v0.36.0
