@@ -19,7 +19,7 @@ require (
 	golang.org/x/tools v0.36.0
 	gopkg.in/yaml.v3 v3.0.1
 	gorm.io/driver/postgres v1.6.0
-	gorm.io/gorm v1.30.3
+	gorm.io/gorm v1.30.5
 )
 
 require (
