@@ -8,7 +8,7 @@ COPY . .
 
 RUN CGO_ENABLED=0 go build -v -buildvcs=false -ldflags="-s -w -X main.Version=${VERSION}" -o funeypot
 
-FROM alpine:3.22
+FROM alpine:3.23
 
 RUN apk --no-cache add ca-certificates
 
