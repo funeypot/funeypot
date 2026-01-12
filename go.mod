@@ -3,7 +3,7 @@ module github.com/funeypot/funeypot
 go 1.25.5
 
 require (
-	github.com/fclairamb/ftpserverlib v0.28.0
+	github.com/fclairamb/ftpserverlib v0.29.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8
@@ -66,7 +66,7 @@ require (
 	golang.org/x/mod v0.28.0 // indirect
 	golang.org/x/net v0.45.0 // indirect
 	golang.org/x/sync v0.17.0 // indirect
-	golang.org/x/sys v0.39.0 // indirect
+	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/text v0.30.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 	modernc.org/libc v1.29.0 // indirect
