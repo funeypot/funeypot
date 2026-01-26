@@ -3,7 +3,7 @@ module github.com/funeypot/funeypot
 go 1.25.6
 
 require (
-	github.com/fclairamb/ftpserverlib v0.29.0
+	github.com/fclairamb/ftpserverlib v0.30.0
 	github.com/gin-gonic/gin v1.11.0
 	github.com/glebarez/sqlite v1.11.0
 	github.com/gliderlabs/ssh v0.3.8
