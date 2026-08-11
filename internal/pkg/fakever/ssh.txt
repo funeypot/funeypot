@@ -1,1 +1,1 @@
-OpenSSH_10.4
+OpenSSH_10.5
